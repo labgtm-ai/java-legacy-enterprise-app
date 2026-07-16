@@ -3,8 +3,6 @@ package com.company.legacy.service.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,9 +38,29 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
 
-        return departments.stream()
-                          .map(this::convertToResponse)
-                          .collect(Collectors.toList());
+        List<DepartmentResponse> responseList =
+                new ArrayList<DepartmentResponse>();
+
+
+
+        for(int i = 0;
+            i < departments.size();
+            i++) {
+
+
+            Department department =
+                    departments.get(i);
+
+
+
+            responseList.add(
+                    convertToResponse(department));
+
+        }
+
+
+
+        return responseList;
 
     }
 
@@ -56,10 +74,18 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
         Department department =
-                Optional.ofNullable(departmentDAO.findById(id))
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Department not found with id : "
-                                        + id));
+                departmentDAO.findById(id);
+
+
+
+        if(department == null) {
+
+
+            throw new ResourceNotFoundException(
+                    "Department not found with id : "
+                            + id);
+
+        }
 
 
 
@@ -77,28 +103,31 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
 
-        Department nonNullDepartment =
-                Optional.ofNullable(department)
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                "Department cannot be null"));
+        if(department == null) {
+
+
+            throw new IllegalArgumentException(
+                    "Department cannot be null");
+
+        }
 
 
 
-        nonNullDepartment.setActive(true);
+        department.setActive(true);
 
 
-        nonNullDepartment.setCreatedDate(
+        department.setCreatedDate(
                 new Date());
 
 
-        nonNullDepartment.setLastModifiedDate(
+        department.setLastModifiedDate(
                 new Date());
 
 
 
         Department saved =
                 departmentDAO.save(
-                        nonNullDepartment);
+                        department);
 
 
 
@@ -118,10 +147,18 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
         Department existing =
-                Optional.ofNullable(departmentDAO.findById(id))
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Department not found : "
-                                        + id));
+                departmentDAO.findById(id);
+
+
+
+        if(existing == null) {
+
+
+            throw new ResourceNotFoundException(
+                    "Department not found : "
+                            + id);
+
+        }
 
 
 
@@ -167,10 +204,18 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
         Department department =
-                Optional.ofNullable(departmentDAO.findById(id))
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Department does not exist : "
-                                        + id));
+                departmentDAO.findById(id);
+
+
+
+        if(department == null) {
+
+
+            throw new ResourceNotFoundException(
+                    "Department does not exist : "
+                            + id);
+
+        }
 
 
 
@@ -193,9 +238,23 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
 
-        return departments.stream()
-                          .map(this::convertToResponse)
-                          .collect(Collectors.toList());
+        List<DepartmentResponse> responseList =
+                new ArrayList<DepartmentResponse>();
+
+
+
+        for(Department department :
+                departments) {
+
+
+            responseList.add(
+                    convertToResponse(department));
+
+        }
+
+
+
+        return responseList;
 
     }
 
@@ -213,8 +272,8 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
 
-        StringBuilder buffer =
-                new StringBuilder();
+        StringBuffer buffer =
+                new StringBuffer();
 
 
 
@@ -284,28 +343,37 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
 
-        return Optional.ofNullable(department).map(d -> {
-            DepartmentResponse response =
-                    new DepartmentResponse();
+        if(department == null) {
+
+            return null;
+
+        }
 
 
-            response.setId(
-                    d.getId());
+
+        DepartmentResponse response =
+                new DepartmentResponse();
 
 
-            response.setName(
-                    d.getName());
+
+        response.setId(
+                department.getId());
 
 
-            response.setLocation(
-                    d.getLocation());
+        response.setName(
+                department.getName());
 
 
-            response.setActive(
-                    d.getActive());
+        response.setLocation(
+                department.getLocation());
 
-            return response;
-        }).orElse(null);
+
+        response.setActive(
+                department.getActive());
+
+
+
+        return response;
 
     }
 
