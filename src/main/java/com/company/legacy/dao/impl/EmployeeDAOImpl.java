@@ -5,7 +5,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Vector;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
@@ -35,222 +38,207 @@ public class EmployeeDAOImpl implements EmployeeDAO {
 
 
     @Override
-    public synchronized List<Employee> findAll() {
-
-
-        List<Employee> employeeList =
-                new ArrayList<Employee>();
-
-
-        for (int i = 0; i < employees.size(); i++) {
-
-            Employee employee =
-                    employees.get(i);
-
-            employeeList.add(employee);
-
-        }
-
-
-        return employeeList;
-
+    public List<Employee> findAll() {
+        return CompletableFuture.supplyAsync(() -> {
+            return employees.stream().collect(Collectors.toList());
+        }).join();
     }
 
 
     @Override
-    public synchronized Employee findById(Integer id) {
+    public Employee findById(Integer id) { // Changed return type to Employee to match interface
+        return CompletableFuture.supplyAsync(() -> {
+            if (id == null) {
+                return null; // Return null for null id, as per interface contract
+            }
+
+            // Using Java Stream API to find the employee
+            return employees.stream()
+                            .filter(employee -> employee != null && employee.getId() != null && employee.getId().equals(id))
+                            .findFirst()
+                            .orElse(null); // Unwrap Optional, return null if not found
+        }).join();
+    }
 
 
-        Employee result = null;
+    @Override
+    public Employee save(Employee employee) { // Changed return type to Employee to match interface
+        return CompletableFuture.supplyAsync(() -> {
+            if (employee == null) {
+                return null; // Return null for null employee input
+            }
+
+            if (employee.getId() == null) {
+                int nextId = employees.size() + 1001;
+                employee.setId(nextId);
+            }
+            employees.add(employee);
+            return employee; // Return the saved employee directly
+        }).join();
+    }
 
 
-        if (id == null) {
 
-            return null;
+    @Override
+    public Employee update(Employee employee) { // Changed return type to Employee to match interface
+        return CompletableFuture.supplyAsync(() -> {
+            if (employee == null || employee.getId() == null) {
+                return null; // Return null for invalid employee input
+            }
 
-        }
-
-
-        Iterator<Employee> iterator =
-                employees.iterator();
-
-
-        while (iterator.hasNext()) {
-
-
-            Employee employee =
-                    iterator.next();
+            for (int i = 0;
+                 i < employees.size();
+                 i++) {
 
 
-            if (employee != null
-                    && employee.getId() != null
-                    && employee.getId().equals(id)) {
+                Employee existing =
+                        employees.get(i);
 
 
-                result = employee;
+                if (existing != null
+                        && existing.getId()
+                        .equals(employee.getId())) {
 
-                break;
+
+                    employees.set(i, employee);
+
+
+                    return employee; // Return the updated employee directly
+
+                }
 
             }
 
-        }
 
-
-        return result;
-
-    }
-
-
-    @Override
-    public synchronized Employee save(Employee employee) {
-
-
-        if (employee == null) {
-
-            return null;
-
-        }
-
-
-        if (employee.getId() == null) {
-
-
-            int nextId =
-                    employees.size() + 1001;
-
-
-            employee.setId(nextId);
-
-        }
-
-
-        employees.add(employee);
-
-
-        return employee;
-
+            return null; // If no employee was found and updated, return null
+        }).join();
     }
 
 
 
     @Override
-    public synchronized Employee update(Employee employee) {
+    public void delete(Integer id) {
+        CompletableFuture.runAsync(() -> {
+            if (id == null) {
 
-
-        if (employee == null
-                || employee.getId() == null) {
-
-            return null;
-
-        }
-
-
-        for (int i = 0;
-             i < employees.size();
-             i++) {
-
-
-            Employee existing =
-                    employees.get(i);
-
-
-            if (existing != null
-                    && existing.getId()
-                    .equals(employee.getId())) {
-
-
-                employees.set(i, employee);
-
-
-                return employee;
+                return;
 
             }
 
-        }
+
+            Iterator<Employee> iterator =
+                    employees.iterator();
 
 
-        return null;
+            while (iterator.hasNext()) {
 
+
+                Employee employee =
+                        iterator.next();
+
+
+                if (employee != null
+                        && employee.getId()
+                        .equals(id)) {
+
+
+                    iterator.remove();
+
+                    break;
+
+                }
+
+            }
+        }).join();
     }
 
 
 
     @Override
-    public synchronized void delete(Integer id) {
+    public List<Employee> searchByName(String name) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<Employee> result =
+                    new ArrayList<Employee>();
 
 
-        if (id == null) {
+            if (name == null) {
 
-            return;
-
-        }
-
-
-        Iterator<Employee> iterator =
-                employees.iterator();
-
-
-        while (iterator.hasNext()) {
-
-
-            Employee employee =
-                    iterator.next();
-
-
-            if (employee != null
-                    && employee.getId()
-                    .equals(id)) {
-
-
-                iterator.remove();
-
-                break;
+                return result;
 
             }
 
-        }
+
+            for (int i = 0;
+                 i < employees.size();
+                 i++) {
 
 
-    }
+                Employee employee =
+                        employees.get(i);
 
 
-
-    @Override
-    public synchronized List<Employee> searchByName(String name) {
+                if (employee != null) {
 
 
-        List<Employee> result =
-                new ArrayList<Employee>();
+                    String fullName =
+                            employee.getFirstName()
+                                    + " "
+                                    + employee.getLastName();
 
 
-        if (name == null) {
+                    if (fullName
+                            .toLowerCase()
+                            .contains(name.toLowerCase())) {
+
+
+                        result.add(employee);
+
+                    }
+
+                }
+
+            }
+
 
             return result;
-
-        }
-
-
-        for (int i = 0;
-             i < employees.size();
-             i++) {
+        }).join();
+    }
 
 
-            Employee employee =
-                    employees.get(i);
+
+    @Override
+    public List<Employee> findByDepartment(
+            Integer departmentId) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<Employee> result =
+                    new ArrayList<Employee>();
 
 
-            if (employee != null) {
+            if (departmentId == null) {
+
+                return result;
+
+            }
 
 
-                String fullName =
-                        employee.getFirstName()
-                                + " "
-                                + employee.getLastName();
+
+            Iterator<Employee> iterator =
+                    employees.iterator();
 
 
-                if (fullName
-                        .toLowerCase()
-                        .contains(name.toLowerCase())) {
+
+            while (iterator.hasNext()) {
+
+
+                Employee employee =
+                        iterator.next();
+
+
+                if (employee != null
+                        && employee.getDepartment() != null
+                        && employee.getDepartment()
+                        .getId()
+                        .equals(departmentId)) {
 
 
                     result.add(employee);
@@ -259,87 +247,35 @@ public class EmployeeDAOImpl implements EmployeeDAO {
 
             }
 
-        }
-
-
-        return result;
-
-    }
-
-
-
-    @Override
-    public synchronized List<Employee> findByDepartment(
-            Integer departmentId) {
-
-
-        List<Employee> result =
-                new ArrayList<Employee>();
-
-
-        if (departmentId == null) {
 
             return result;
-
-        }
-
-
-
-        Iterator<Employee> iterator =
-                employees.iterator();
-
-
-
-        while (iterator.hasNext()) {
-
-
-            Employee employee =
-                    iterator.next();
-
-
-            if (employee != null
-                    && employee.getDepartment() != null
-                    && employee.getDepartment()
-                    .getId()
-                    .equals(departmentId)) {
-
-
-                result.add(employee);
-
-            }
-
-        }
-
-
-        return result;
-
+        }).join();
     }
 
 
 
     @Override
-    public int count() {
+    public int count() { // Changed return type from Integer to int
+        return CompletableFuture.supplyAsync(() -> {
+            int count = 0;
 
 
-        int count = 0;
+            for (int i = 0;
+                 i < employees.size();
+                 i++) {
 
 
-        for (int i = 0;
-             i < employees.size();
-             i++) {
+                if (employees.get(i) != null) {
 
+                    count++;
 
-            if (employees.get(i) != null) {
-
-                count++;
+                }
 
             }
 
-        }
 
-
-        return count;
-
+            return count;
+        }).join();
     }
 
 
@@ -349,37 +285,36 @@ public class EmployeeDAOImpl implements EmployeeDAO {
      *
      * Uses anonymous Comparator instead of lambda.
      */
-    public List<Employee> sortByName() {
-
-
-        List<Employee> employeeList =
-                findAll();
-
-
-
-        Collections.sort(
-                employeeList,
-                new Comparator<Employee>() {
-
-
-                    @Override
-                    public int compare(
-                            Employee e1,
-                            Employee e2) {
-
-
-                        return e1.getFirstName()
-                                .compareTo(
-                                        e2.getFirstName());
-
-                    }
-
-                });
+    public CompletableFuture<List<Employee>> sortByName() {
+        return CompletableFuture.supplyAsync(() -> {
+            List<Employee> employeeList =
+                    findAll(); // Now calls the synchronous findAll
 
 
 
-        return employeeList;
+            Collections.sort(
+                    employeeList,
+                    new Comparator<Employee>() {
 
+
+                        @Override
+                        public int compare(
+                                Employee e1,
+                                Employee e2) {
+
+
+                            return e1.getFirstName()
+                                    .compareTo(
+                                            e2.getFirstName());
+
+                        }
+
+                    });
+
+
+
+            return employeeList;
+        });
     }
 
 
@@ -387,45 +322,44 @@ public class EmployeeDAOImpl implements EmployeeDAO {
     /**
      * Legacy report generation.
      */
-    public String generateEmployeeSummary() {
+    public CompletableFuture<String> generateEmployeeSummary() {
+        return CompletableFuture.supplyAsync(() -> {
+            StringBuilder buffer =
+                    new StringBuilder();
 
 
-        StringBuffer buffer =
-                new StringBuffer();
+            for (int i = 0;
+                 i < employees.size();
+                 i++) {
 
 
-        for (int i = 0;
-             i < employees.size();
-             i++) {
+                Employee employee =
+                        employees.get(i);
 
 
-            Employee employee =
-                    employees.get(i);
+                if (employee != null) {
 
 
-            if (employee != null) {
+                    buffer.append(
+                            employee.getId());
 
 
-                buffer.append(
-                        employee.getId());
+                    buffer.append(" - ");
 
 
-                buffer.append(" - ");
+                    buffer.append(
+                            employee.getFirstName());
 
 
-                buffer.append(
-                        employee.getFirstName());
+                    buffer.append("\n");
 
-
-                buffer.append("\n");
+                }
 
             }
 
-        }
 
-
-        return buffer.toString();
-
+            return buffer.toString();
+        });
     }
 
 

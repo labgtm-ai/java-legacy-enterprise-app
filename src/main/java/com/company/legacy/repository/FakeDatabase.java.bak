@@ -4,7 +4,6 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
-import java.util.concurrent.CompletableFuture;
 
 import com.company.legacy.entity.Department;
 import com.company.legacy.entity.Employee;
@@ -92,28 +91,16 @@ public final class FakeDatabase {
 
     }
 
-    public static CompletableFuture<Vector<Employee>> getEmployees() {
-        return CompletableFuture.supplyAsync(() -> {
-            // Simulate I/O latency
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            return EMPLOYEES;
-        });
+    public static synchronized Vector<Employee> getEmployees() {
+
+        return EMPLOYEES;
+
     }
 
-    public static CompletableFuture<Hashtable<Integer, Department>> getDepartments() {
-        return CompletableFuture.supplyAsync(() -> {
-            // Simulate I/O latency
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            return DEPARTMENTS;
-        });
+    public static synchronized Hashtable<Integer, Department> getDepartments() {
+
+        return DEPARTMENTS;
+
     }
 
     private static Vector<Employee> employees =
@@ -140,8 +127,22 @@ public final class FakeDatabase {
 
 
         if(employeeList != null) {
-            // Replaced traditional for-loop with List.forEach
-            employeeList.forEach(employees::add);
+
+
+            for(int i = 0;
+                i < employeeList.size();
+                i++) {
+
+
+                Employee employee =
+                        employeeList.get(i);
+
+
+
+                employees.add(employee);
+
+            }
+
         }
 
 
@@ -165,12 +166,32 @@ public final class FakeDatabase {
 
 
         if(departmentList != null) {
-            // Replaced traditional for-loop with List.forEach
-            departmentList.forEach(department -> departments.put(department.getId(), department));
+
+
+            for(int i = 0;
+                i < departmentList.size();
+                i++) {
+
+
+                Department department =
+                        departmentList.get(i);
+
+
+
+                departments.put(
+                        department.getId(),
+                        department);
+
+            }
+
         }
 
 
     }
+
+
+
+
 
 
 
