@@ -326,8 +326,8 @@ public class DepartmentDAOImpl implements DepartmentDAO {
     public String generateDepartmentSummary() {
 
 
-        StringBuilder buffer =
-                new StringBuilder();
+        StringBuffer buffer =
+                new StringBuffer();
 
 
 
