@@ -2,6 +2,9 @@ package com.company.legacy.mapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.Objects;
 
 import org.springframework.stereotype.Component;
 
@@ -92,55 +95,46 @@ public class EmployeeMapper {
 
 
 
-        if(employee.getDepartment() != null) {
-
-
-            DepartmentResponse department =
+        // SRAO: Replaced explicit null check with Optional.ofNullable for department.
+        Optional.ofNullable(employee.getDepartment()).ifPresent(dept -> {
+            DepartmentResponse departmentResponse =
                     new DepartmentResponse();
 
 
-
-            department.setId(
-                    employee.getDepartment()
-                            .getId());
+            departmentResponse.setId(
+                    dept.getId());
 
 
-            department.setName(
-                    employee.getDepartment()
-                            .getName());
+            departmentResponse.setName(
+                    dept.getName());
 
 
-            department.setLocation(
-                    employee.getDepartment()
-                            .getLocation());
+            departmentResponse.setLocation(
+                    dept.getLocation());
 
 
-            department.setActive(
-                    employee.getDepartment()
-                            .getActive());
+            departmentResponse.setActive(
+                    dept.getActive());
 
 
 
             response.setDepartment(
-                    department);
+                    departmentResponse);
 
-        }
-
-
-
-        if(employee.getAddress() != null) {
+        });
 
 
+
+        // SRAO: Replaced explicit null check with Optional.ofNullable for address.
+        Optional.ofNullable(employee.getAddress()).ifPresent(address -> {
             response.setCity(
-                    employee.getAddress()
-                            .getCity());
+                    address.getCity());
 
 
             response.setCountry(
-                    employee.getAddress()
-                            .getCountry());
+                    address.getCountry());
 
-        }
+        });
 
 
 
@@ -161,45 +155,15 @@ public class EmployeeMapper {
             List<Employee> employees) {
 
 
-        List<EmployeeResponse> responseList =
-                new ArrayList<EmployeeResponse>();
-
-
-
-        if(employees == null) {
-
-            return responseList;
-
+        // SRAO: Replaced traditional for-loop with Stream API for collection processing.
+        if (employees == null) {
+            return new ArrayList<>();
         }
 
-
-
-        for(int i = 0;
-            i < employees.size();
-            i++) {
-
-
-            Employee employee =
-                    employees.get(i);
-
-
-
-            EmployeeResponse response =
-                    toResponse(employee);
-
-
-
-            if(response != null) {
-
-                responseList.add(response);
-
-            }
-
-        }
-
-
-
-        return responseList;
+        return employees.stream()
+                .map(this::toResponse)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
     }
 
@@ -305,48 +269,28 @@ public class EmployeeMapper {
 
 
 
-        if(request.getFirstName() != null) {
-
-            employee.setFirstName(
-                    request.getFirstName());
-
-        }
+        // SRAO: Replaced explicit null check with Optional.ofNullable.
+        Optional.ofNullable(request.getFirstName()).ifPresent(employee::setFirstName);
 
 
 
-        if(request.getLastName() != null) {
-
-            employee.setLastName(
-                    request.getLastName());
-
-        }
+        // SRAO: Replaced explicit null check with Optional.ofNullable.
+        Optional.ofNullable(request.getLastName()).ifPresent(employee::setLastName);
 
 
 
-        if(request.getEmail() != null) {
-
-            employee.setEmail(
-                    request.getEmail());
-
-        }
+        // SRAO: Replaced explicit null check with Optional.ofNullable.
+        Optional.ofNullable(request.getEmail()).ifPresent(employee::setEmail);
 
 
 
-        if(request.getPhoneNumber() != null) {
-
-            employee.setPhoneNumber(
-                    request.getPhoneNumber());
-
-        }
+        // SRAO: Replaced explicit null check with Optional.ofNullable.
+        Optional.ofNullable(request.getPhoneNumber()).ifPresent(employee::setPhoneNumber);
 
 
 
-        if(request.getDesignation() != null) {
-
-            employee.setDesignation(
-                    request.getDesignation());
-
-        }
+        // SRAO: Replaced explicit null check with Optional.ofNullable.
+        Optional.ofNullable(request.getDesignation()).ifPresent(employee::setDesignation);
 
 
 
@@ -377,27 +321,9 @@ public class EmployeeMapper {
             Employee employee) {
 
 
-        String firstName = "";
-
-        String lastName = "";
-
-
-
-        if(employee.getFirstName() != null) {
-
-            firstName =
-                    employee.getFirstName();
-
-        }
-
-
-
-        if(employee.getLastName() != null) {
-
-            lastName =
-                    employee.getLastName();
-
-        }
+        // SRAO: Replaced explicit null checks with Optional.ofNullable and orElse.
+        String firstName = Optional.ofNullable(employee.getFirstName()).orElse("");
+        String lastName = Optional.ofNullable(employee.getLastName()).orElse("");
 
 
 
@@ -484,14 +410,10 @@ public class EmployeeMapper {
 
 
 
-        if(employee.getSkills() != null) {
-
-
-            copy.setSkills(
-                    new ArrayList<String>(
-                            employee.getSkills()));
-
-        }
+        // SRAO: Replaced explicit null check with Optional.ofNullable.
+        Optional.ofNullable(employee.getSkills())
+                .map(ArrayList::new)
+                .ifPresent(copy::setSkills);
 
 
 

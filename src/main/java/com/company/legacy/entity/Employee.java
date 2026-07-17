@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects; // SRAO: Added for Objects.requireNonNullElse
+import java.util.Optional; // SRAO: Added for Optional usage
 
 public class Employee implements Serializable {
 
@@ -41,7 +43,7 @@ public class Employee implements Serializable {
 
     public Employee() {
 
-        this.skills = new ArrayList<String>();
+        this.skills = new ArrayList<>(); // SRAO: Used diamond operator
 
     }
 
@@ -92,11 +94,8 @@ public class Employee implements Serializable {
         this.lastModifiedDate = lastModifiedDate;
         this.status = status;
         this.manager = manager;
-        this.skills = skills;
-
-        if (this.skills == null) {
-            this.skills = new ArrayList<String>();
-        }
+        // SRAO: Replaced explicit null check with Objects.requireNonNullElse for constructor parameter
+        this.skills = Objects.requireNonNullElse(skills, new ArrayList<>());
 
     }
 
@@ -233,10 +232,10 @@ public class Employee implements Serializable {
         builder.append(", designation=").append(designation);
         builder.append(", status=").append(status);
 
-        if (department != null) {
-            builder.append(", department=");
-            builder.append(department.getName());
-        }
+        // SRAO: Replaced explicit null check with Optional for department field
+        Optional.ofNullable(department)
+                .map(Department::getName)
+                .ifPresent(name -> builder.append(", department=").append(name));
 
         builder.append("]");
 

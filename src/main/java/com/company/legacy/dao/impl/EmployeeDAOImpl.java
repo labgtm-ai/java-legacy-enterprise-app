@@ -6,6 +6,10 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.stream.IntStream;
 
 import org.springframework.stereotype.Repository;
 
@@ -38,232 +42,94 @@ public class EmployeeDAOImpl implements EmployeeDAO {
     public synchronized List<Employee> findAll() {
 
 
-        List<Employee> employeeList =
-                new ArrayList<Employee>();
-
-
-        for (int i = 0; i < employees.size(); i++) {
-
-            Employee employee =
-                    employees.get(i);
-
-            employeeList.add(employee);
-
-        }
-
-
-        return employeeList;
+        // SRAO: Replaced traditional for-loop with Stream API for collection transformation.
+        return employees.stream()
+                        .collect(Collectors.toList());
 
     }
 
 
     @Override
     public synchronized Employee findById(Integer id) {
-
-
-        Employee result = null;
-
-
-        if (id == null) {
-
-            return null;
-
-        }
-
-
-        Iterator<Employee> iterator =
-                employees.iterator();
-
-
-        while (iterator.hasNext()) {
-
-
-            Employee employee =
-                    iterator.next();
-
-
-            if (employee != null
-                    && employee.getId() != null
-                    && employee.getId().equals(id)) {
-
-
-                result = employee;
-
-                break;
-
-            }
-
-        }
-
-
-        return result;
-
+        // SRAO: Replaced explicit null checks with Optional and streams for cleaner handling
+        return Optional.ofNullable(id)
+                .flatMap(searchId -> employees.stream()
+                        .filter(Objects::nonNull)
+                        .filter(e -> e.getId() != null && e.getId().equals(searchId))
+                        .findFirst())
+                .orElse(null);
     }
 
 
     @Override
     public synchronized Employee save(Employee employee) {
-
-
-        if (employee == null) {
-
-            return null;
-
-        }
-
-
-        if (employee.getId() == null) {
-
-
-            int nextId =
-                    employees.size() + 1001;
-
-
-            employee.setId(nextId);
-
-        }
-
-
-        employees.add(employee);
-
-
-        return employee;
-
+        // SRAO: Replaced explicit null check with Optional for cleaner handling
+        return Optional.ofNullable(employee)
+                .map(emp -> {
+                    if (emp.getId() == null) {
+                        int nextId =
+                                employees.size() + 1001;
+                        emp.setId(nextId);
+                    }
+                    employees.add(emp);
+                    return emp;
+                })
+                .orElse(null);
     }
 
 
 
     @Override
     public synchronized Employee update(Employee employee) {
+        // SRAO: Replaced explicit null checks with Optional for cleaner handling
+        return Optional.ofNullable(employee)
+                .filter(e -> e.getId() != null)
+                .flatMap(empToUpdate -> {
+                    // SRAO: Replaced traditional for-loop with IntStream to find and update employee by index.
+                    int index = IntStream.range(0, employees.size())
+                                .filter(i -> {
+                                    Employee existing =
+                                            employees.get(i);
+                                    return existing != null
+                                            && existing.getId() != null
+                                            && existing.getId()
+                                            .equals(empToUpdate.getId());
+                                })
+                                .findFirst()
+                                .orElse(-1);
 
-
-        if (employee == null
-                || employee.getId() == null) {
-
-            return null;
-
-        }
-
-
-        for (int i = 0;
-             i < employees.size();
-             i++) {
-
-
-            Employee existing =
-                    employees.get(i);
-
-
-            if (existing != null
-                    && existing.getId()
-                    .equals(employee.getId())) {
-
-
-                employees.set(i, employee);
-
-
-                return employee;
-
-            }
-
-        }
-
-
-        return null;
-
+                    if (index != -1) {
+                        employees.set(index, empToUpdate);
+                        return Optional.of(empToUpdate);
+                    } else {
+                        return Optional.empty();
+                    }
+                })
+                .orElse(null);
     }
 
 
 
     @Override
     public synchronized void delete(Integer id) {
-
-
-        if (id == null) {
-
-            return;
-
-        }
-
-
-        Iterator<Employee> iterator =
-                employees.iterator();
-
-
-        while (iterator.hasNext()) {
-
-
-            Employee employee =
-                    iterator.next();
-
-
-            if (employee != null
-                    && employee.getId()
-                    .equals(id)) {
-
-
-                iterator.remove();
-
-                break;
-
-            }
-
-        }
-
-
+        // SRAO: Replaced explicit null check with Optional.ifPresent and stream removeIf
+        Optional.ofNullable(id).ifPresent(searchId -> {
+            employees.removeIf(e -> e != null && e.getId() != null && e.getId().equals(searchId));
+        });
     }
 
 
 
     @Override
     public synchronized List<Employee> searchByName(String name) {
-
-
-        List<Employee> result =
-                new ArrayList<Employee>();
-
-
-        if (name == null) {
-
-            return result;
-
-        }
-
-
-        for (int i = 0;
-             i < employees.size();
-             i++) {
-
-
-            Employee employee =
-                    employees.get(i);
-
-
-            if (employee != null) {
-
-
-                String fullName =
-                        employee.getFirstName()
-                                + " "
-                                + employee.getLastName();
-
-
-                if (fullName
-                        .toLowerCase()
-                        .contains(name.toLowerCase())) {
-
-
-                    result.add(employee);
-
-                }
-
-            }
-
-        }
-
-
-        return result;
-
+        // SRAO: Replaced explicit null check with Optional and streams for cleaner handling
+        return Optional.ofNullable(name)
+                .map(searchName -> employees.stream()
+                        .filter(Objects::nonNull)
+                        .filter(e -> e.getFirstName() != null && e.getLastName() != null)
+                        .filter(e -> (e.getFirstName() + " " + e.getLastName()).toLowerCase().contains(searchName.toLowerCase()))
+                        .collect(Collectors.toList()))
+                .orElseGet(ArrayList::new);
     }
 
 
@@ -271,75 +137,24 @@ public class EmployeeDAOImpl implements EmployeeDAO {
     @Override
     public synchronized List<Employee> findByDepartment(
             Integer departmentId) {
-
-
-        List<Employee> result =
-                new ArrayList<Employee>();
-
-
-        if (departmentId == null) {
-
-            return result;
-
-        }
-
-
-
-        Iterator<Employee> iterator =
-                employees.iterator();
-
-
-
-        while (iterator.hasNext()) {
-
-
-            Employee employee =
-                    iterator.next();
-
-
-            if (employee != null
-                    && employee.getDepartment() != null
-                    && employee.getDepartment()
-                    .getId()
-                    .equals(departmentId)) {
-
-
-                result.add(employee);
-
-            }
-
-        }
-
-
-        return result;
-
+        // SRAO: Replaced explicit null check with Optional and streams for cleaner handling
+        return Optional.ofNullable(departmentId)
+                .map(searchDeptId -> employees.stream()
+                        .filter(Objects::nonNull)
+                        .filter(e -> e.getDepartment() != null && e.getDepartment().getId() != null)
+                        .filter(e -> e.getDepartment().getId().equals(searchDeptId))
+                        .collect(Collectors.toList()))
+                .orElseGet(ArrayList::new);
     }
 
 
 
     @Override
     public int count() {
-
-
-        int count = 0;
-
-
-        for (int i = 0;
-             i < employees.size();
-             i++) {
-
-
-            if (employees.get(i) != null) {
-
-                count++;
-
-            }
-
-        }
-
-
-        return count;
-
+        // SRAO: Replaced explicit null check with stream filter for cleaner handling
+        return (int) employees.stream()
+                .filter(Objects::nonNull)
+                .count();
     }
 
 
@@ -388,44 +203,15 @@ public class EmployeeDAOImpl implements EmployeeDAO {
      * Legacy report generation.
      */
     public String generateEmployeeSummary() {
-
-
-        StringBuffer buffer =
-                new StringBuffer();
-
-
-        for (int i = 0;
-             i < employees.size();
-             i++) {
-
-
-            Employee employee =
-                    employees.get(i);
-
-
-            if (employee != null) {
-
-
-                buffer.append(
-                        employee.getId());
-
-
-                buffer.append(" - ");
-
-
-                buffer.append(
-                        employee.getFirstName());
-
-
-                buffer.append("\n");
-
-            }
-
-        }
-
-
-        return buffer.toString();
-
+        // SRAO: Replaced StringBuffer (or implicit string concatenation) with StringBuilder for efficiency.
+        StringBuilder sb = new StringBuilder();
+        employees.stream()
+                .filter(Objects::nonNull)
+                .forEach(employee -> sb.append(employee.getId())
+                                       .append(" - ")
+                                       .append(employee.getFirstName())
+                                       .append("\n"));
+        return sb.toString();
     }
 
 
