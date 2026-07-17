@@ -2,6 +2,10 @@ package com.company.legacy.mapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -30,38 +34,32 @@ public class DepartmentMapper {
     public DepartmentResponse toResponse(
             Department department) {
 
-
-        if (department == null) {
-
-            return null;
-
-        }
-
-
-
-        DepartmentResponse response =
+        // SRAO: Replaced explicit null check with Optional.ofNullable and map.
+        return Optional.ofNullable(department).map(dept -> {
+            DepartmentResponse response =
                 new DepartmentResponse();
 
 
-
-        response.setId(
-                department.getId());
-
-
-        response.setName(
-                department.getName());
+            response.setId(
+                dept.getId());
 
 
-        response.setLocation(
-                department.getLocation());
+            response.setName(
+                dept.getName());
 
 
-        response.setActive(
-                department.getActive());
+            response.setLocation(
+                dept.getLocation());
+
+
+            response.setActive(
+                dept.getActive());
 
 
 
-        return response;
+            return response;
+
+        }).orElse(null);
 
     }
 
@@ -80,45 +78,13 @@ public class DepartmentMapper {
             List<Department> departments) {
 
 
-        List<DepartmentResponse> responseList =
-                new ArrayList<DepartmentResponse>();
-
-
-
-        if (departments == null) {
-
-            return responseList;
-
-        }
-
-
-
-        for(int i = 0;
-            i < departments.size();
-            i++) {
-
-
-            Department department =
-                    departments.get(i);
-
-
-
-            DepartmentResponse response =
-                    toResponse(department);
-
-
-
-            if(response != null) {
-
-                responseList.add(response);
-
-            }
-
-        }
-
-
-
-        return responseList;
+        // SRAO: Replaced explicit null check and traditional loop with Optional.ofNullable, stream, map, and filter.
+        return Optional.ofNullable(departments)
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(this::toResponse)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
     }
 
@@ -145,39 +111,20 @@ public class DepartmentMapper {
 
 
 
-        if(source.getName() != null) {
-
-            target.setName(
-                    source.getName());
-
-        }
+        // SRAO: Replaced explicit null checks with Optional.ofNullable and ifPresent.
+        Optional.ofNullable(source.getName()).ifPresent(target::setName);
 
 
 
-        if(source.getLocation() != null) {
-
-            target.setLocation(
-                    source.getLocation());
-
-        }
+        Optional.ofNullable(source.getLocation()).ifPresent(target::setLocation);
 
 
 
-        if(source.getDescription() != null) {
-
-            target.setDescription(
-                    source.getDescription());
-
-        }
+        Optional.ofNullable(source.getDescription()).ifPresent(target::setDescription);
 
 
 
-        if(source.getActive() != null) {
-
-            target.setActive(
-                    source.getActive());
-
-        }
+        Optional.ofNullable(source.getActive()).ifPresent(target::setActive);
 
     }
 
@@ -194,49 +141,46 @@ public class DepartmentMapper {
             Department department) {
 
 
-        if(department == null) {
+        // SRAO: Replaced explicit null check with Optional.ofNullable and map.
+        return Optional.ofNullable(department).map(dept -> {
 
-            return null;
-
-        }
-
-
-
-        Department copy =
+            Department copy =
                 new Department();
 
 
 
-        copy.setId(
-                department.getId());
+            copy.setId(
+                dept.getId());
 
 
-        copy.setName(
-                department.getName());
+            copy.setName(
+                dept.getName());
 
 
-        copy.setLocation(
-                department.getLocation());
+            copy.setLocation(
+                dept.getLocation());
 
 
-        copy.setDescription(
-                department.getDescription());
+            copy.setDescription(
+                dept.getDescription());
 
 
-        copy.setActive(
-                department.getActive());
+            copy.setActive(
+                dept.getActive());
 
 
-        copy.setCreatedDate(
-                department.getCreatedDate());
+            copy.setCreatedDate(
+                dept.getCreatedDate());
 
 
-        copy.setLastModifiedDate(
-                department.getLastModifiedDate());
+            copy.setLastModifiedDate(
+                dept.getLastModifiedDate());
 
 
 
-        return copy;
+            return copy;
+
+        }).orElse(null);
 
     }
 

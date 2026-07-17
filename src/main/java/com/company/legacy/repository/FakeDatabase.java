@@ -126,23 +126,8 @@ public final class FakeDatabase {
 
 
 
-        if(employeeList != null) {
-
-
-            for(int i = 0;
-                i < employeeList.size();
-                i++) {
-
-
-                Employee employee =
-                        employeeList.get(i);
-
-
-
-                employees.add(employee);
-
-            }
-
+        if(employeeList != null) { // SRAO: Replaced traditional for-loop with Stream API for collection population.
+            employeeList.stream().forEach(employees::add);
         }
 
 
@@ -165,31 +150,13 @@ public final class FakeDatabase {
 
 
 
-        if(departmentList != null) {
-
-
-            for(int i = 0;
-                i < departmentList.size();
-                i++) {
-
-
-                Department department =
-                        departmentList.get(i);
-
-
-
-                departments.put(
-                        department.getId(),
-                        department);
-
-            }
-
+        if(departmentList != null) { // SRAO: Replaced traditional for-loop with Stream API for map population.
+            departmentList.stream().forEach(department ->
+                departments.put(department.getId(), department));
         }
 
 
     }
-
-
 
 
 
