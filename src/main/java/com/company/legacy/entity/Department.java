@@ -146,7 +146,8 @@ public class Department implements Serializable {
         final int prime = 31;
         int result = 1;
 
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        // SRAO: Replaced explicit null check with Optional.ofNullable().map().orElse()
+        result = prime * result + Optional.ofNullable(id).map(Object::hashCode).orElse(0);
 
         return result;
     }
@@ -168,19 +169,8 @@ public class Department implements Serializable {
 
         Department other = (Department) obj;
 
-        if (id == null) {
-
-            if (other.id != null) {
-                return false;
-            }
-
-        } else if (!id.equals(other.id)) {
-
-            return false;
-
-        }
-
-        return true;
+        // SRAO: Replaced explicit null check with Optional.ofNullable().equals()
+        return Optional.ofNullable(id).equals(Optional.ofNullable(other.id));
     }
 
     @Override
