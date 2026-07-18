@@ -1,6 +1,6 @@
 package com.company.legacy.constants;
 
-import java.time.format.DateTimeFormatter; // SRAO: Added import for java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatter;
 
 /**
  * Legacy application constants.

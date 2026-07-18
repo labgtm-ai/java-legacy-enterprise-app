@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -31,7 +32,11 @@ public class EmployeeDAOImpl implements EmployeeDAO {
 
     public EmployeeDAOImpl() {
 
-        employees = new ArrayList<>(FakeDatabase.getEmployees()); // SRAO: Converted the initial Vector from FakeDatabase to an ArrayList.
+        // SRAO: Modernized to safely convert a potentially raw or untyped collection from FakeDatabase to a List<Employee> without unchecked warnings.
+        employees = FakeDatabase.getEmployees().stream()
+                .filter(Employee.class::isInstance)
+                .map(Employee.class::cast)
+                .collect(Collectors.toCollection(ArrayList::new));
 
     }
 
@@ -47,149 +52,104 @@ public class EmployeeDAOImpl implements EmployeeDAO {
 
     @Override
     public synchronized Employee findById(Integer id) {
-
-
-        if (id == null) {
-
-            return null;
-
-        }
-
-        // SRAO: Replaced Iterator loop with Stream API for finding an employee by ID.
-        return employees.stream()
-                .filter(employee -> employee != null
-                        && employee.getId() != null
-                        && employee.getId().equals(id))
-                .findFirst()
+        // SRAO: Replaced explicit null check with Optional for the 'id' parameter and employee properties.
+        return Optional.ofNullable(id)
+                .flatMap(validId -> employees.stream()
+                        .filter(Objects::nonNull) // Filter out null employees
+                        .filter(employee -> Optional.ofNullable(employee.getId())
+                                .filter(employeeId -> employeeId.equals(validId))
+                                .isPresent())
+                        .findFirst())
                 .orElse(null);
-
     }
 
 
     @Override
     public synchronized Employee save(Employee employee) {
-
-
-        if (employee == null) {
-
-            return null;
-
-        }
-
-
-        if (employee.getId() == null) {
-
-
-            int nextId =
-                    employees.size() + 1001;
-
-
-            employee.setId(nextId);
-
-        }
-
-
-        employees.add(employee);
-
-
-        return employee;
-
+        // SRAO: Replaced explicit null check with Optional for the 'employee' parameter.
+        return Optional.ofNullable(employee)
+                .map(emp -> {
+                    if (emp.getId() == null) {
+                        int nextId = employees.size() + 1001;
+                        emp.setId(nextId);
+                    }
+                    employees.add(emp);
+                    return emp;
+                })
+                .orElse(null);
     }
 
 
 
     @Override
     public synchronized Employee update(Employee employee) {
+        // SRAO: Replaced explicit null check with Optional for the 'employee' parameter and its ID.
+        return Optional.ofNullable(employee)
+                .filter(emp -> emp.getId() != null) // Ensure employee and its ID are not null
+                .flatMap(emp -> {
+                    int index = IntStream.range(0, employees.size())
+                            .filter(i -> {
+                                Employee currentEmployee = employees.get(i);
+                                return Optional.ofNullable(currentEmployee)
+                                        .map(Employee::getId)
+                                        .filter(id -> id.equals(emp.getId()))
+                                        .isPresent();
+                            })
+                            .findFirst()
+                            .orElse(-1);
 
-
-        if (employee == null
-                || employee.getId() == null) {
-
-            return null;
-
-        }
-
-        // SRAO: Replaced for-loop with Stream API to find the index for updating an employee.
-        int index = IntStream.range(0, employees.size())
-                .filter(i -> employees.get(i) != null
-                        && employees.get(i).getId() != null
-                        && employees.get(i).getId().equals(employee.getId()))
-                .findFirst()
-                .orElse(-1);
-
-        if (index != -1) {
-            employees.set(index, employee);
-            return employee;
-        }
-
-
-        return null;
-
+                    if (index != -1) {
+                        employees.set(index, emp);
+                        return Optional.of(emp);
+                    }
+                    return Optional.empty();
+                })
+                .orElse(null);
     }
 
 
 
     @Override
     public synchronized void delete(Integer id) {
-
-
-        if (id == null) {
-
-            return;
-
-        }
-
-        // SRAO: Replaced Iterator loop with List.removeIf for deleting an employee by ID.
-        employees.removeIf(employee -> employee != null
-                && employee.getId() != null
-                && employee.getId().equals(id));
-
-
+        // SRAO: Replaced explicit null check with Optional for the 'id' parameter.
+        Optional.ofNullable(id)
+                .ifPresent(validId -> employees.removeIf(employee ->
+                        Optional.ofNullable(employee)
+                                .map(Employee::getId)
+                                .filter(employeeId -> employeeId.equals(validId))
+                                .isPresent()));
     }
 
 
 
     @Override
     public synchronized List<Employee> searchByName(String name) {
-
-
-        if (name == null) {
-
-            return new ArrayList<>();
-
-        }
-
-        // SRAO: Replaced for-loop with Stream API for searching employees by name.
-        return employees.stream()
-                .filter(employee -> employee != null
-                        && (employee.getFirstName() + " " + employee.getLastName())
-                        .toLowerCase()
-                        .contains(name.toLowerCase()))
-                .collect(Collectors.toList());
-
+        // SRAO: Replaced explicit null check with Optional for the 'name' parameter.
+        return Optional.ofNullable(name)
+                .map(validName -> employees.stream()
+                        .filter(Objects::nonNull) // Filter out null employees
+                        .filter(employee -> (employee.getFirstName() + " " + employee.getLastName())
+                                .toLowerCase()
+                                .contains(validName.toLowerCase()))
+                        .collect(Collectors.toList()))
+                .orElseGet(ArrayList::new);
     }
 
 
 
     @Override
-    public synchronized List<Employee> findByDepartment(
-            Integer departmentId) {
-
-
-        if (departmentId == null) {
-
-            return new ArrayList<>();
-
-        }
-
-        // SRAO: Replaced Iterator loop with Stream API for finding employees by department.
-        return employees.stream()
-                .filter(employee -> employee != null
-                        && employee.getDepartment() != null
-                        && employee.getDepartment().getId() != null
-                        && employee.getDepartment().getId().equals(departmentId))
-                .collect(Collectors.toList());
-
+    public synchronized List<Employee> findByDepartment(Integer departmentId) {
+        // SRAO: Replaced explicit null check with Optional for the 'departmentId' parameter and nested properties.
+        return Optional.ofNullable(departmentId)
+                .map(validDepartmentId -> employees.stream()
+                        .filter(Objects::nonNull) // Filter out null employees
+                        .filter(employee ->
+                                Optional.ofNullable(employee.getDepartment())
+                                        .map(dept -> dept.getId())
+                                        .filter(id -> id.equals(validDepartmentId))
+                                        .isPresent())
+                        .collect(Collectors.toList()))
+                .orElseGet(ArrayList::new);
     }
 
 

@@ -253,11 +253,8 @@ public class Employee implements Serializable {
 
         Employee other = (Employee) obj;
 
-        if (id == null) {
-            return other.id == null;
-        }
-
-        return id.equals(other.id);
+        // SRAO: Replace explicit null check with Optional for comparison
+        return Optional.ofNullable(this.id).equals(Optional.ofNullable(other.id));
     }
 
     @Override
@@ -267,7 +264,8 @@ public class Employee implements Serializable {
 
         int result = 1;
 
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        // SRAO: Replace explicit null check with Optional for hashCode calculation
+        result = prime * result + Optional.ofNullable(id).map(Object::hashCode).orElse(0);
 
         return result;
     }
