@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.PostConstruct;
 
@@ -32,20 +31,13 @@ public class DataInitializer {
      */
     @PostConstruct
     public void initializeData() {
-        // Wrap the blocking data loading calls in CompletableFuture.runAsync()
-        // to offload them to a background thread pool (ForkJoinPool.commonPool() by default).
-        // loadEmployees depends on departments being loaded, so we chain the futures.
-        CompletableFuture.runAsync(this::loadDepartments)
-            .thenRunAsync(this::loadEmployees)
-            .exceptionally(ex -> {
-                // Log any exceptions that occur during asynchronous data initialization
-                System.err.println("Failed to initialize application data asynchronously: " + ex.getMessage());
-                // Depending on the application's requirements, further error handling
-                // like rethrowing a runtime exception or shutting down might be necessary.
-                return null; // Return null to complete exceptionally
-            });
-        // The @PostConstruct method now completes immediately, allowing the main application
-        // startup thread to proceed without blocking on data loading.
+
+
+        loadDepartments();
+
+        loadEmployees();
+
+
     }
 
 
