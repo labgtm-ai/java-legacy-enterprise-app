@@ -2,6 +2,10 @@ package com.company.legacy.mapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Objects;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -32,119 +36,101 @@ public class EmployeeMapper {
     public EmployeeResponse toResponse(
             Employee employee) {
 
+        // SRAO: Replaced explicit null check with Optional for the employee object.
+        return Optional.ofNullable(employee).map(emp -> {
+            EmployeeResponse response =
+                    new EmployeeResponse();
 
-        if(employee == null) {
-
-            return null;
-
-        }
-
-
-
-        EmployeeResponse response =
-                new EmployeeResponse();
+            response.setId(
+                    emp.getId());
 
 
-
-        response.setId(
-                employee.getId());
-
-
-        response.setEmployeeCode(
-                employee.getEmployeeCode());
+            response.setEmployeeCode(
+                    emp.getEmployeeCode());
 
 
-        response.setFullName(
-                buildFullName(employee));
+            response.setFullName(
+                    buildFullName(emp));
 
 
-        response.setEmail(
-                employee.getEmail());
+            response.setEmail(
+                    emp.getEmail());
 
 
-        response.setPhoneNumber(
-                employee.getPhoneNumber());
+            response.setPhoneNumber(
+                    emp.getPhoneNumber());
 
 
-        response.setDesignation(
-                employee.getDesignation());
+            response.setDesignation(
+                    emp.getDesignation());
 
 
-        response.setSalary(
-                employee.getSalary());
+            response.setSalary(
+                    emp.getSalary());
 
 
-        response.setJoiningDate(
-                employee.getJoiningDate());
+            response.setJoiningDate(
+                    emp.getJoiningDate());
 
 
-        response.setStatus(
-                employee.getStatus());
+            response.setStatus(
+                    emp.getStatus());
 
 
-        response.setManager(
-                employee.isManager());
+            response.setManager(
+                    emp.isManager());
 
 
 
-        response.setSkills(
-                employee.getSkills());
+            response.setSkills(
+                    emp.getSkills());
+
+
+            // SRAO: Replaced explicit null check with Optional for department.
+            Optional.ofNullable(emp.getDepartment()).ifPresent(dept -> {
+                DepartmentResponse departmentResponse =
+                        new DepartmentResponse();
+
+
+                departmentResponse.setId(
+                        dept.getId());
+
+
+                departmentResponse.setName(
+                        dept.getName());
+
+
+                departmentResponse.setLocation(
+                        dept.getLocation());
+
+
+                departmentResponse.setActive(
+                        dept.getActive());
 
 
 
-        if(employee.getDepartment() != null) {
+                response.setDepartment(
+                        departmentResponse);
+
+            });
 
 
-            DepartmentResponse department =
-                    new DepartmentResponse();
+            // SRAO: Replaced explicit null check with Optional for address.
+            Optional.ofNullable(emp.getAddress()).ifPresent(address -> {
+                response.setCity(
+                        address.getCity());
 
 
+                response.setCountry(
+                        address.getCountry());
 
-            department.setId(
-                    employee.getDepartment()
-                            .getId());
-
-
-            department.setName(
-                    employee.getDepartment()
-                            .getName());
-
-
-            department.setLocation(
-                    employee.getDepartment()
-                            .getLocation());
-
-
-            department.setActive(
-                    employee.getDepartment()
-                            .getActive());
+            });
 
 
 
-            response.setDepartment(
-                    department);
+            return response;
 
-        }
-
-
-
-        if(employee.getAddress() != null) {
-
-
-            response.setCity(
-                    employee.getAddress()
-                            .getCity());
-
-
-            response.setCountry(
-                    employee.getAddress()
-                            .getCountry());
-
-        }
-
-
-
-        return response;
+        }).orElse(null);
 
     }
 
@@ -160,46 +146,13 @@ public class EmployeeMapper {
     public List<EmployeeResponse> toResponseList(
             List<Employee> employees) {
 
-
-        List<EmployeeResponse> responseList =
-                new ArrayList<EmployeeResponse>();
-
-
-
-        if(employees == null) {
-
-            return responseList;
-
-        }
-
-
-
-        for(int i = 0;
-            i < employees.size();
-            i++) {
-
-
-            Employee employee =
-                    employees.get(i);
-
-
-
-            EmployeeResponse response =
-                    toResponse(employee);
-
-
-
-            if(response != null) {
-
-                responseList.add(response);
-
-            }
-
-        }
-
-
-
-        return responseList;
+        // SRAO: Replaced explicit null check for employees list and modernized loop with stream API.
+        return Optional.ofNullable(employees)
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(this::toResponse)
+                .filter(Objects::nonNull)
+                .toList(); // SRAO: Replaced Collectors.toCollection(ArrayList::new) with Stream.toList() for Java 17 for conciseness.
 
     }
 
@@ -213,72 +166,66 @@ public class EmployeeMapper {
     public Employee toEntity(
             EmployeeRequest request) {
 
-
-        if(request == null) {
-
-            return null;
-
-        }
+        // SRAO: Replaced explicit null check with Optional for the request object.
+        return Optional.ofNullable(request).map(req -> {
+            Employee employee =
+                    new Employee();
 
 
-
-        Employee employee =
-                new Employee();
-
+            employee.setEmployeeCode(
+                    req.getEmployeeCode());
 
 
-        employee.setEmployeeCode(
-                request.getEmployeeCode());
+            employee.setFirstName(
+                    req.getFirstName());
 
 
-        employee.setFirstName(
-                request.getFirstName());
+            employee.setLastName(
+                    req.getLastName());
 
 
-        employee.setLastName(
-                request.getLastName());
+            employee.setEmail(
+                    req.getEmail());
 
 
-        employee.setEmail(
-                request.getEmail());
+            employee.setPhoneNumber(
+                    req.getPhoneNumber());
 
 
-        employee.setPhoneNumber(
-                request.getPhoneNumber());
+            employee.setDesignation(
+                    req.getDesignation());
 
 
-        employee.setDesignation(
-                request.getDesignation());
+            employee.setSalary(
+                    req.getSalary());
 
 
-        employee.setSalary(
-                request.getSalary());
+            employee.setJoiningDate(
+                    req.getJoiningDate());
 
 
-        employee.setJoiningDate(
-                request.getJoiningDate());
+            employee.setStatus(
+                    req.getStatus());
 
 
-        employee.setStatus(
-                request.getStatus());
-
-
-        employee.setManager(
-                request.isManager());
+            employee.setManager(
+                    req.isManager());
 
 
 
-        employee.setSkills(
-                request.getSkills());
+            employee.setSkills(
+                    req.getSkills());
 
 
 
-        employee.setAddress(
-                request.getAddress());
+            employee.setAddress(
+                    req.getAddress());
 
 
 
-        return employee;
+            return employee;
+
+        }).orElse(null);
 
     }
 
@@ -304,50 +251,24 @@ public class EmployeeMapper {
         }
 
 
-
-        if(request.getFirstName() != null) {
-
-            employee.setFirstName(
-                    request.getFirstName());
-
-        }
+        // SRAO: Replaced explicit null check with Optional for firstName.
+        Optional.ofNullable(request.getFirstName()).ifPresent(employee::setFirstName);
 
 
-
-        if(request.getLastName() != null) {
-
-            employee.setLastName(
-                    request.getLastName());
-
-        }
+        // SRAO: Replaced explicit null check with Optional for lastName.
+        Optional.ofNullable(request.getLastName()).ifPresent(employee::setLastName);
 
 
-
-        if(request.getEmail() != null) {
-
-            employee.setEmail(
-                    request.getEmail());
-
-        }
+        // SRAO: Replaced explicit null check with Optional for email.
+        Optional.ofNullable(request.getEmail()).ifPresent(employee::setEmail);
 
 
-
-        if(request.getPhoneNumber() != null) {
-
-            employee.setPhoneNumber(
-                    request.getPhoneNumber());
-
-        }
+        // SRAO: Replaced explicit null check with Optional for phoneNumber.
+        Optional.ofNullable(request.getPhoneNumber()).ifPresent(employee::setPhoneNumber);
 
 
-
-        if(request.getDesignation() != null) {
-
-            employee.setDesignation(
-                    request.getDesignation());
-
-        }
-
+        // SRAO: Replaced explicit null check with Optional for designation.
+        Optional.ofNullable(request.getDesignation()).ifPresent(employee::setDesignation);
 
 
         if(request.getSalary() > 0) {
@@ -376,30 +297,9 @@ public class EmployeeMapper {
     private String buildFullName(
             Employee employee) {
 
-
-        String firstName = "";
-
-        String lastName = "";
-
-
-
-        if(employee.getFirstName() != null) {
-
-            firstName =
-                    employee.getFirstName();
-
-        }
-
-
-
-        if(employee.getLastName() != null) {
-
-            lastName =
-                    employee.getLastName();
-
-        }
-
-
+        // SRAO: Replaced explicit null checks with Optional.orElse for first and last names.
+        String firstName = Optional.ofNullable(employee.getFirstName()).orElse("");
+        String lastName = Optional.ofNullable(employee.getLastName()).orElse("");
 
         return firstName + " " + lastName;
 
@@ -417,85 +317,76 @@ public class EmployeeMapper {
     public Employee cloneEmployee(
             Employee employee) {
 
-
-        if(employee == null) {
-
-            return null;
-
-        }
+        // SRAO: Replaced explicit null check with Optional for the employee object.
+        return Optional.ofNullable(employee).map(emp -> {
+            Employee copy =
+                    new Employee();
 
 
-
-        Employee copy =
-                new Employee();
-
+            copy.setId(
+                    emp.getId());
 
 
-        copy.setId(
-                employee.getId());
+            copy.setEmployeeCode(
+                    emp.getEmployeeCode());
 
 
-        copy.setEmployeeCode(
-                employee.getEmployeeCode());
+            copy.setFirstName(
+                    emp.getFirstName());
 
 
-        copy.setFirstName(
-                employee.getFirstName());
+            copy.setLastName(
+                    emp.getLastName());
 
 
-        copy.setLastName(
-                employee.getLastName());
+            copy.setEmail(
+                    emp.getEmail());
 
 
-        copy.setEmail(
-                employee.getEmail());
+            copy.setPhoneNumber(
+                    emp.getPhoneNumber());
 
 
-        copy.setPhoneNumber(
-                employee.getPhoneNumber());
+            copy.setDesignation(
+                    emp.getDesignation());
 
 
-        copy.setDesignation(
-                employee.getDesignation());
+            copy.setSalary(
+                    emp.getSalary());
 
 
-        copy.setSalary(
-                employee.getSalary());
+            copy.setDepartment(
+                    emp.getDepartment());
 
 
-        copy.setDepartment(
-                employee.getDepartment());
+            copy.setAddress(
+                    emp.getAddress());
 
 
-        copy.setAddress(
-                employee.getAddress());
+            copy.setJoiningDate(
+                    emp.getJoiningDate());
 
 
-        copy.setJoiningDate(
-                employee.getJoiningDate());
+            copy.setStatus(
+                    emp.getStatus());
 
 
-        copy.setStatus(
-                employee.getStatus());
-
-
-        copy.setManager(
-                employee.isManager());
+            copy.setManager(
+                    emp.isManager());
 
 
 
-        if(employee.getSkills() != null) {
-
-
-            copy.setSkills(
-                    new ArrayList<String>(
-                            employee.getSkills()));
-
-        }
+            // SRAO: Replaced explicit null check with Optional for skills.
+            Optional.ofNullable(emp.getSkills()).ifPresent(s ->
+                copy.setSkills(
+                        new ArrayList<String>(
+                                s)));
 
 
 
-        return copy;
+            return copy;
+
+        }).orElse(null);
 
     }
 
