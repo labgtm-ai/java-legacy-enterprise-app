@@ -2,159 +2,116 @@ package com.demo.legacy;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
 
 /**
- * Legacy order service used for the SRAO modernization demo.
+ * Modernized order service for the SRAO modernization demo.
  *
- * Intentionally included patterns:
- * - Raw collections
- * - Unchecked casts
- * - Traditional loops
- * - Explicit null checks
- * - StringBuffer
- * - String concatenation
- * - Traditional switch statement
- * - Thread
- * - Runnable
- * - Anonymous inner class
- * - synchronized method
- * - Thread.sleep()
- * - Callback interface
+ * Original patterns addressed:
+ * - Raw collections -> Generics
+ * - Unchecked casts -> Generics
+ * - Traditional loops -> String.join
+ * - Explicit null checks -> Optional
+ * - StringBuffer -> String.join
+ * - String concatenation -> String.format
+ * - Traditional switch statement -> Kept for simplicity
+ * - Thread / Runnable / Anonymous inner class -> CompletableFuture
+ * - synchronized method -> Removed, replaced with non-blocking async
+ * - Thread.sleep() -> CompletableFuture.delayedExecutor
+ * - Callback interface -> CompletableFuture as return type
  */
 @Service
 public class OrderService {
 
-    /**
-     * Legacy callback contract.
-     */
-    public interface OrderCallback {
-
-        void onComplete(String result);
-
-        void onError(Exception exception);
-    }
+    // SRAO: Removed the OrderCallback interface as its functionality is replaced by CompletableFuture as a return type.
 
     /**
      * Generates a simple order summary.
      *
-     * Legacy patterns:
-     * - Raw List
-     * - Unchecked cast
-     * - Indexed loop
-     * - Explicit null checks
-     * - StringBuffer
-     * - String concatenation
-     * - Traditional switch
+     * Modernized patterns:
+     * - Generics for List
+     * - Optional for null/empty checks
+     * - String.join for item list construction
+     * - String.format for final summary
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public String generateOrderSummary(
             String customer,
             String status) {
 
-        if (customer == null || customer.trim().length() == 0) {
-            customer = "UNKNOWN";
-        }
+        // SRAO: Replaced explicit null and empty string check with Optional.ofNullable and orElse.
+        customer = Optional.ofNullable(customer).filter(s -> !s.trim().isEmpty()).orElse("UNKNOWN");
 
-        if (status == null || status.trim().length() == 0) {
-            status = "NEW";
-        }
+        // SRAO: Replaced explicit null and empty string check with Optional.ofNullable and orElse.
+        status = Optional.ofNullable(status).filter(s -> !s.trim().isEmpty()).orElse("NEW");
 
-        List items = new ArrayList();
+        // SRAO: Replaced raw List with a generic List<String> to avoid unchecked cast warnings.
+        List<String> items = new ArrayList<>();
 
         items.add("BOOK");
         items.add("LAPTOP");
 
-        String normalizedStatus;
+        // SRAO: Replaced traditional switch statement with a switch expression for conciseness.
+        String normalizedStatus = switch (status.toUpperCase()) {
+            case "NEW" -> "NEW";
+            case "PROCESSING" -> "PROCESSING";
+            case "COMPLETED" -> "COMPLETED";
+            default -> "UNKNOWN";
+        };
 
-        switch (status.toUpperCase()) {
+        // SRAO: Replaced StringBuffer and indexed loop with String.join for cleaner item list construction.
+        String itemSummary = String.join(",", items);
 
-            case "NEW":
-                normalizedStatus = "NEW";
-                break;
-
-            case "PROCESSING":
-                normalizedStatus = "PROCESSING";
-                break;
-
-            case "COMPLETED":
-                normalizedStatus = "COMPLETED";
-                break;
-
-            default:
-                normalizedStatus = "UNKNOWN";
-                break;
-        }
-
-        StringBuffer itemBuffer = new StringBuffer();
-
-        for (int i = 0; i < items.size(); i++) {
-
-            String item = (String) items.get(i);
-
-            itemBuffer.append(item);
-
-            if (i < items.size() - 1) {
-                itemBuffer.append(",");
-            }
-        }
-
-        return "Customer: "
-                + customer
-                + " | Status: "
-                + normalizedStatus
-                + " | Items: "
-                + itemBuffer.toString()
-                + " | Processed: true";
+        // SRAO: Replaced string concatenation with String.format for better readability.
+        return String.format("Customer: %s | Status: %s | Items: %s | Processed: true",
+                             customer, normalizedStatus, itemSummary);
     }
 
     /**
-     * Simulates asynchronous legacy order processing.
+     * Simulates asynchronous order processing using CompletableFuture.
      *
-     * Legacy patterns:
-     * - synchronized method
-     * - Thread
-     * - Runnable
-     * - Anonymous inner class
-     * - Blocking Thread.sleep()
-     * - Callback interface
+     * Modernized patterns:
+     * - CompletableFuture as return type for asynchronous results.
+     * - Non-blocking delay with CompletableFuture.delayedExecutor.
+     * - Exception handling via exceptionally.
      */
-    public synchronized void processOrderAsync(
-            final String customer,
-            final OrderCallback callback) {
+    // SRAO: Removed 'synchronized' and replaced blocking sleep with CompletableFuture for async processing.
+    // SRAO: Changed method signature to return CompletableFuture<String> instead of using a callback interface.
+    public CompletableFuture<String> processOrderAsync(final String customer) {
 
-        if (callback == null) {
-            return;
-        }
+        CompletableFuture<String> resultFuture = new CompletableFuture<>();
 
-        Thread worker = new Thread(new Runnable() {
+        // Use CompletableFuture for asynchronous execution and non-blocking delay
+        CompletableFuture.runAsync(() -> {
+            String result = "Order processed for customer: " + customer;
+            resultFuture.complete(result); // Complete the future with the result
+        }, CompletableFuture.delayedExecutor(500, TimeUnit.MILLISECONDS))
+        .exceptionally(ex -> {
+            // SRAO: Refactored exception handling to use more specific types where possible.
+            Throwable cause = ex.getCause(); // Get the underlying cause
 
-            @Override
-            public void run() {
-
-                try {
-
-                    Thread.sleep(500);
-
-                    String result =
-                            "Order processed for customer: " + customer;
-
-                    callback.onComplete(result);
-
-                } catch (InterruptedException exception) {
-
-                    Thread.currentThread().interrupt();
-
-                    callback.onError(exception);
-
-                } catch (Exception exception) {
-
-                    callback.onError(exception);
-                }
+            if (cause instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+                resultFuture.completeExceptionally(cause); // Complete with the specific InterruptedException
+            } else if (cause instanceof RuntimeException) {
+                // Handle specific RuntimeException (e.g., NullPointerException, IllegalArgumentException, etc.)
+                resultFuture.completeExceptionally(cause);
+            } else if (cause instanceof Error) {
+                // Handle specific Error (e.g., OutOfMemoryError, StackOverflowError)
+                resultFuture.completeExceptionally(cause);
+            } else if (cause != null) {
+                // Handle any other specific Throwable that might be wrapped
+                resultFuture.completeExceptionally(cause);
+            } else {
+                // If there's no specific cause, complete with the CompletionException itself
+                resultFuture.completeExceptionally(ex);
             }
+            return null; // Return null as this is a void-returning CompletableFuture.runAsync chain
         });
 
-        worker.start();
+        return resultFuture;
     }
 }

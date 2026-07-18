@@ -3,6 +3,7 @@ package com.demo.legacy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -72,23 +73,21 @@ public class OrderServiceTest {
         final AtomicReference<Exception> errorResult =
                 new AtomicReference<Exception>();
 
-        orderService.processOrderAsync(
-                "John",
-                new OrderService.OrderCallback() {
-
-                    @Override
-                    public void onComplete(String result) {
-                        successResult.set(result);
-                        latch.countDown();
-                    }
-
-                    @Override
-                    public void onError(Exception exception) {
-                        errorResult.set(exception);
-                        latch.countDown();
-                    }
-                }
+        // SRAO: Updated to use the modernized processOrderAsync method which returns CompletableFuture.
+        CompletableFuture<String> future = orderService.processOrderAsync(
+                "John"
         );
+
+        // SRAO: Replaced the custom OrderCallback with CompletableFuture's whenComplete callback.
+        future.whenComplete((result, exception) -> {
+            if (exception == null) {
+                successResult.set(result);
+            } else {
+                // Wrap the Throwable in an Exception to match the original test's AtomicReference type.
+                errorResult.set(new Exception(exception));
+            }
+            latch.countDown();
+        });
 
         boolean completed = latch.await(
                 2,

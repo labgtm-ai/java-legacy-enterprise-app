@@ -31,11 +31,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Initial legacy-compatible build baseline -->
-        <java.version>8</java.version>
+        <java.version>17</java.version>
 
         <!-- These values can be updated by the SRAO Agent -->
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+            <maven.compiler.release>17</maven.compiler.release>
     </properties>
 
     <dependencies>
