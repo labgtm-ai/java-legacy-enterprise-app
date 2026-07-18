@@ -3,6 +3,8 @@ package com.company.legacy.service.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,31 +38,10 @@ public class DepartmentServiceImpl implements DepartmentService {
         List<Department> departments =
                 departmentDAO.findAll();
 
-
-
-        List<DepartmentResponse> responseList =
-                new ArrayList<DepartmentResponse>();
-
-
-
-        for(int i = 0;
-            i < departments.size();
-            i++) {
-
-
-            Department department =
-                    departments.get(i);
-
-
-
-            responseList.add(
-                    convertToResponse(department));
-
-        }
-
-
-
-        return responseList;
+        // SRAO: Replaced traditional for-loop with Stream API for concise data transformation.
+        return departments.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
 
     }
 
@@ -73,19 +54,11 @@ public class DepartmentServiceImpl implements DepartmentService {
             Integer id) {
 
 
-        Department department =
-                departmentDAO.findById(id);
-
-
-
-        if(department == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Department not found with id : "
-                            + id);
-
-        }
+        // SRAO: Replaced explicit null check with Optional.orElseThrow for better null handling.
+        Department department = Optional.ofNullable(departmentDAO.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Department not found with id : "
+                                + id));
 
 
 
@@ -103,13 +76,10 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
 
-        if(department == null) {
-
-
-            throw new IllegalArgumentException(
-                    "Department cannot be null");
-
-        }
+        // SRAO: Replaced explicit null check with Optional.orElseThrow for better null handling.
+        department = Optional.ofNullable(department)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Department cannot be null"));
 
 
 
@@ -146,19 +116,11 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
 
-        Department existing =
-                departmentDAO.findById(id);
-
-
-
-        if(existing == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Department not found : "
-                            + id);
-
-        }
+        // SRAO: Replaced explicit null check with Optional.orElseThrow for better null handling.
+        Department existing = Optional.ofNullable(departmentDAO.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Department not found : "
+                                + id));
 
 
 
@@ -203,19 +165,11 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
 
-        Department department =
-                departmentDAO.findById(id);
-
-
-
-        if(department == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Department does not exist : "
-                            + id);
-
-        }
+        // SRAO: Replaced explicit null check with Optional.orElseThrow for better null handling.
+        Optional.ofNullable(departmentDAO.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Department does not exist : "
+                                + id));
 
 
 
@@ -272,8 +226,9 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
 
-        StringBuffer buffer =
-                new StringBuffer();
+        // SRAO: Replaced StringBuffer with StringBuilder for better performance in a non-thread-safe context.
+        StringBuilder buffer =
+                new StringBuilder();
 
 
 
@@ -285,33 +240,11 @@ public class DepartmentServiceImpl implements DepartmentService {
                 "==================\n");
 
 
-
-        for(int i = 0;
-            i < departments.size();
-            i++) {
-
-
-
-            Department department =
-                    departments.get(i);
-
-
-
-            buffer.append(
-                    department.getId());
-
-
-            buffer.append(" - ");
-
-
-            buffer.append(
-                    department.getName());
-
-
-            buffer.append("\n");
-
-        }
-
+        // SRAO: Replaced traditional for-loop with Stream API for concise string aggregation.
+        String departmentDetails = departments.stream()
+            .map(department -> department.getId() + " - " + department.getName() + "\n")
+            .collect(Collectors.joining());
+        buffer.append(departmentDetails);
 
 
         return buffer.toString();
@@ -343,37 +276,17 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
 
-        if(department == null) {
-
-            return null;
-
-        }
-
-
-
-        DepartmentResponse response =
-                new DepartmentResponse();
-
-
-
-        response.setId(
-                department.getId());
-
-
-        response.setName(
-                department.getName());
-
-
-        response.setLocation(
-                department.getLocation());
-
-
-        response.setActive(
-                department.getActive());
-
-
-
-        return response;
+        // SRAO: Replaced explicit null check with Optional.map and orElse for cleaner null handling.
+        return Optional.ofNullable(department)
+                .map(d -> {
+                    DepartmentResponse response = new DepartmentResponse();
+                    response.setId(d.getId());
+                    response.setName(d.getName());
+                    response.setLocation(d.getLocation());
+                    response.setActive(d.getActive());
+                    return response;
+                })
+                .orElse(null);
 
     }
 

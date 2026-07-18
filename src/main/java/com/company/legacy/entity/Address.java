@@ -143,7 +143,7 @@ public class Address implements Serializable {
      */
     public String getFullAddress() {
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder(); // SRAO: Replaced StringBuffer with StringBuilder for better performance in a non-thread-safe context.
 
         if (addressLine1 != null) {
             buffer.append(addressLine1);
@@ -225,7 +225,7 @@ public class Address implements Serializable {
     @Override
     public String toString() {
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder(); // SRAO: Replaced StringBuffer with StringBuilder for better performance in a non-thread-safe context.
 
         buffer.append("Address [");
         buffer.append("id=").append(id);

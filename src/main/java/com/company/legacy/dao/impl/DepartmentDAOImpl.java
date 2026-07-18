@@ -7,6 +7,9 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
@@ -41,36 +44,10 @@ public class DepartmentDAOImpl implements DepartmentDAO {
     public synchronized List<Department> findAll() {
 
 
-        List<Department> departmentList =
-                new ArrayList<Department>();
-
-
-        Iterator<Map.Entry<Integer, Department>> iterator =
-                departments.entrySet().iterator();
-
-
-
-        while (iterator.hasNext()) {
-
-
-            Map.Entry<Integer, Department> entry =
-                    iterator.next();
-
-
-            Department department =
-                    entry.getValue();
-
-
-            if (department != null) {
-
-                departmentList.add(department);
-
-            }
-
-        }
-
-
-        return departmentList;
+        // SRAO: Replaced explicit null check with stream filtering and Optional.
+        return departments.values().stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
     }
 
@@ -80,18 +57,10 @@ public class DepartmentDAOImpl implements DepartmentDAO {
     public synchronized Department findById(Integer id) {
 
 
-        if (id == null) {
-
-            return null;
-
-        }
-
-
-        Department department =
-                departments.get(id);
-
-
-        return department;
+        // SRAO: Replaced explicit null check with Optional.ofNullable.
+        return Optional.ofNullable(id)
+                .map(departments::get)
+                .orElse(null);
 
     }
 
@@ -102,33 +71,20 @@ public class DepartmentDAOImpl implements DepartmentDAO {
             Department department) {
 
 
-        if (department == null) {
-
-            return null;
-
-        }
-
-
-        if (department.getId() == null) {
-
-
-            int nextId =
-                    departments.size() + 1;
-
-
-            department.setId(nextId);
-
-        }
-
-
-
-        departments.put(
-                department.getId(),
-                department);
-
-
-
-        return department;
+        // SRAO: Replaced explicit null check with Optional.ofNullable.
+        return Optional.ofNullable(department)
+                .map(d -> {
+                    if (d.getId() == null) {
+                        int nextId =
+                                departments.size() + 1;
+                        d.setId(nextId);
+                    }
+                    departments.put(
+                            d.getId(),
+                            d);
+                    return d;
+                })
+                .orElse(null);
 
     }
 
@@ -139,37 +95,17 @@ public class DepartmentDAOImpl implements DepartmentDAO {
             Department department) {
 
 
-        if (department == null
-                || department.getId() == null) {
-
-
-            return null;
-
-        }
-
-
-
-        Department existing =
-                departments.get(
-                        department.getId());
-
-
-
-        if (existing != null) {
-
-
-            departments.put(
-                    department.getId(),
-                    department);
-
-
-            return department;
-
-        }
-
-
-
-        return null;
+        // SRAO: Replaced explicit null checks with Optional.ofNullable and flatMap.
+        return Optional.ofNullable(department)
+                .filter(d -> d.getId() != null)
+                .flatMap(d -> Optional.ofNullable(departments.get(d.getId()))
+                        .map(existing -> {
+                            departments.put(
+                                    d.getId(),
+                                    d);
+                            return d;
+                        }))
+                .orElse(null);
 
     }
 
@@ -180,20 +116,10 @@ public class DepartmentDAOImpl implements DepartmentDAO {
             Integer id) {
 
 
-        if (id == null) {
-
-            return;
-
-        }
-
-
-        if (departments.containsKey(id)) {
-
-
-            departments.remove(id);
-
-        }
-
+        // SRAO: Replaced explicit null check with Optional.ofNullable.
+        Optional.ofNullable(id)
+                .filter(departments::containsKey)
+                .ifPresent(departments::remove);
 
     }
 
@@ -204,52 +130,15 @@ public class DepartmentDAOImpl implements DepartmentDAO {
             String name) {
 
 
-        List<Department> result =
-                new ArrayList<Department>();
-
-
-        if (name == null) {
-
-            return result;
-
-        }
-
-
-
-        Iterator<Department> iterator =
-                departments.values()
-                        .iterator();
-
-
-
-        while (iterator.hasNext()) {
-
-
-            Department department =
-                    iterator.next();
-
-
-
-            if (department != null
-                    && department.getName() != null) {
-
-
-                if (department.getName()
-                        .toLowerCase()
-                        .contains(
-                                name.toLowerCase())) {
-
-
-                    result.add(department);
-
-                }
-
-            }
-
-        }
-
-
-        return result;
+        // SRAO: Replaced explicit null checks with Optional.ofNullable and stream filtering.
+        return Optional.ofNullable(name)
+                .map(n -> departments.values().stream()
+                        .filter(Objects::nonNull)
+                        .filter(d -> Optional.ofNullable(d.getName())
+                                .map(deptName -> deptName.toLowerCase().contains(n.toLowerCase()))
+                                .orElse(false))
+                        .collect(Collectors.toList()))
+                .orElse(new ArrayList<>());
 
     }
 
@@ -259,24 +148,10 @@ public class DepartmentDAOImpl implements DepartmentDAO {
     public int count() {
 
 
-        int count = 0;
-
-
-
-        for (Integer key :
-                departments.keySet()) {
-
-
-            if (departments.get(key) != null) {
-
-                count++;
-
-            }
-
-        }
-
-
-        return count;
+        // SRAO: Replaced explicit null check with stream filtering.
+        return (int) departments.values().stream()
+                .filter(Objects::nonNull)
+                .count();
 
     }
 
@@ -288,33 +163,10 @@ public class DepartmentDAOImpl implements DepartmentDAO {
     public List<Department> sortByName() {
 
 
-        List<Department> list =
-                findAll();
-
-
-
-        Collections.sort(
-                list,
-                new Comparator<Department>() {
-
-
-                    @Override
-                    public int compare(
-                            Department d1,
-                            Department d2) {
-
-
-                        return d1.getName()
-                                .compareTo(
-                                        d2.getName());
-
-                    }
-
-                });
-
-
-
-        return list;
+        // SRAO: Replaced Collections.sort with Stream API's sorted and Comparator.comparing.
+        return findAll().stream()
+                .sorted(Comparator.comparing(Department::getName))
+                .collect(Collectors.toList());
 
     }
 
@@ -326,47 +178,20 @@ public class DepartmentDAOImpl implements DepartmentDAO {
     public String generateDepartmentSummary() {
 
 
-        StringBuffer buffer =
-                new StringBuffer();
+        // SRAO: Replaced Collectors.joining with explicit StringBuilder for string concatenation.
+        List<String> departmentStrings = departments.values().stream()
+                .filter(Objects::nonNull)
+                .map(d -> d.getId() + " - " + d.getName())
+                .collect(Collectors.toList());
 
-
-
-        Iterator<Department> iterator =
-                departments.values()
-                        .iterator();
-
-
-
-        while (iterator.hasNext()) {
-
-
-            Department department =
-                    iterator.next();
-
-
-
-            if (department != null) {
-
-
-                buffer.append(
-                        department.getId());
-
-
-                buffer.append(" - ");
-
-
-                buffer.append(
-                        department.getName());
-
-
-                buffer.append("\n");
-
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < departmentStrings.size(); i++) {
+            sb.append(departmentStrings.get(i));
+            if (i < departmentStrings.size() - 1) {
+                sb.append("\n");
             }
-
         }
-
-
-        return buffer.toString();
+        return sb.toString();
 
     }
 
