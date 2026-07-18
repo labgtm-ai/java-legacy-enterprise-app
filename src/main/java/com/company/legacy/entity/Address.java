@@ -143,7 +143,7 @@ public class Address implements Serializable {
      */
     public String getFullAddress() {
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder(); // SRAO: Replaced StringBuffer with StringBuilder for performance in a non-thread-safe context.
 
         if (addressLine1 != null) {
             buffer.append(addressLine1);
@@ -200,11 +200,9 @@ public class Address implements Serializable {
             return false;
         }
 
-        if (!(obj instanceof Address)) {
+        if (!(obj instanceof Address other)) { // SRAO: Modernized instanceof check with pattern matching to avoid explicit cast.
             return false;
         }
-
-        Address other = (Address) obj;
 
         if (id == null) {
 
@@ -225,7 +223,7 @@ public class Address implements Serializable {
     @Override
     public String toString() {
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder(); // SRAO: Replaced StringBuffer with StringBuilder for performance in a non-thread-safe context.
 
         buffer.append("Address [");
         buffer.append("id=").append(id);

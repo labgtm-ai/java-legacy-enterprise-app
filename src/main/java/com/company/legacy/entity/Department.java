@@ -2,6 +2,7 @@ package com.company.legacy.entity;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Optional;
 
 /**
  * Represents a department within the organization.
@@ -69,13 +70,8 @@ public class Department implements Serializable {
     }
 
     public void setName(String name) {
-
-        if (name != null) {
-            this.name = name.trim();
-        } else {
-            this.name = null;
-        }
-
+        // SRAO: Replaced explicit null check with Optional.ofNullable for cleaner handling.
+        this.name = Optional.ofNullable(name).map(String::trim).orElse(null);
     }
 
     public String getLocation() {
@@ -83,13 +79,8 @@ public class Department implements Serializable {
     }
 
     public void setLocation(String location) {
-
-        if (location != null) {
-            this.location = location.trim();
-        } else {
-            this.location = null;
-        }
-
+        // SRAO: Replaced explicit null check with Optional.ofNullable for cleaner handling.
+        this.location = Optional.ofNullable(location).map(String::trim).orElse(null);
     }
 
     public String getDescription() {
@@ -97,13 +88,8 @@ public class Department implements Serializable {
     }
 
     public void setDescription(String description) {
-
-        if (description != null) {
-            this.description = description.trim();
-        } else {
-            this.description = null;
-        }
-
+        // SRAO: Replaced explicit null check with Optional.ofNullable for cleaner handling.
+        this.description = Optional.ofNullable(description).map(String::trim).orElse(null);
     }
 
     public Boolean getActive() {
@@ -150,12 +136,8 @@ public class Department implements Serializable {
      * Checks whether the department is active.
      */
     public boolean isActiveDepartment() {
-
-        if (active == null) {
-            return false;
-        }
-
-        return active.booleanValue();
+        // SRAO: Replaced explicit null check with Optional.ofNullable for cleaner handling.
+        return Optional.ofNullable(active).orElse(false);
     }
 
     @Override
@@ -180,11 +162,10 @@ public class Department implements Serializable {
             return false;
         }
 
-        if (!(obj instanceof Department)) {
+        // SRAO: Replaced explicit cast after instanceof with pattern matching for instanceof.
+        if (!(obj instanceof Department other)) {
             return false;
         }
-
-        Department other = (Department) obj;
 
         if (id == null) {
 

@@ -1,6 +1,6 @@
 package com.company.legacy.exception;
 
-import java.util.Date;
+import java.time.Instant;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
 
 
         response.setTimestamp(
-                new Date());
+                Instant.now()); // SRAO: Replaced java.util.Date with java.time.Instant
 
 
         response.setStatus(
@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
 
 
         response.setTimestamp(
-                new Date());
+                Instant.now()); // SRAO: Replaced java.util.Date with java.time.Instant
 
 
         response.setStatus(
@@ -105,7 +105,7 @@ public class GlobalExceptionHandler {
 
 
         response.setTimestamp(
-                new Date());
+                Instant.now()); // SRAO: Replaced java.util.Date with java.time.Instant
 
 
         response.setStatus(
@@ -140,7 +140,7 @@ public class GlobalExceptionHandler {
     public static class ErrorResponse {
 
 
-        private Date timestamp;
+        private Instant timestamp; // SRAO: Replaced java.util.Date with java.time.Instant
 
         private int status;
 
@@ -156,13 +156,13 @@ public class GlobalExceptionHandler {
 
 
 
-        public Date getTimestamp() {
+        public Instant getTimestamp() { // SRAO: Replaced java.util.Date with java.time.Instant
             return timestamp;
         }
 
 
 
-        public void setTimestamp(Date timestamp) {
+        public void setTimestamp(Instant timestamp) { // SRAO: Replaced java.util.Date with java.time.Instant
             this.timestamp = timestamp;
         }
 
@@ -208,8 +208,8 @@ public class GlobalExceptionHandler {
         public String toString() {
 
 
-            StringBuffer buffer =
-                    new StringBuffer();
+            StringBuilder buffer =
+                    new StringBuilder(); // SRAO: Replaced StringBuffer with StringBuilder
 
 
             buffer.append("ErrorResponse [");
