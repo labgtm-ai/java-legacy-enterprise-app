@@ -3,6 +3,8 @@ package com.company.legacy.service.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional; // SRAO: Added for Optional usage
+import java.util.stream.Collectors; // SRAO: Added for Stream API collect method
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,29 +40,10 @@ public class EmployeeServiceImpl implements EmployeeService {
                 employeeDAO.findAll();
 
 
-        List<EmployeeResponse> responseList =
-                new ArrayList<EmployeeResponse>();
-
-
-        for (int i = 0;
-             i < employees.size();
-             i++) {
-
-
-            Employee employee =
-                    employees.get(i);
-
-
-            EmployeeResponse response =
-                    convertToResponse(employee);
-
-
-            responseList.add(response);
-
-        }
-
-
-        return responseList;
+        // SRAO: Replaced traditional for-loop with Stream API for mapping and collecting.
+        return employees.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
 
     }
 
@@ -69,22 +52,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeResponse getEmployeeById(Integer id) {
 
-
-        Employee employee =
-                employeeDAO.findById(id);
-
-
-
-        if (employee == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Employee not found with id : "
-                            + id);
-
-        }
-
-
+        // SRAO: Replaced explicit null check with Optional.ofNullable and orElseThrow for cleaner error handling.
+        Employee employee = Optional.ofNullable(employeeDAO.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id : " + id));
 
         return convertToResponse(employee);
 
@@ -131,20 +101,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
 
-        Employee existing =
-                employeeDAO.findById(id);
-
-
-
-        if (existing == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Employee not found : "
-                            + id);
-
-        }
-
+        // SRAO: Replaced explicit null check with Optional.ofNullable and orElseThrow for cleaner error handling.
+        Employee existing = Optional.ofNullable(employeeDAO.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found : " + id));
 
 
         existing.setFirstName(
@@ -194,20 +153,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     public void deleteEmployee(Integer id) {
 
 
-        Employee employee =
-                employeeDAO.findById(id);
-
-
-
-        if (employee == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Employee does not exist : "
-                            + id);
-
-        }
-
+        // SRAO: Replaced explicit null check with Optional.ofNullable and orElseThrow for cleaner error handling.
+        Employee employee = Optional.ofNullable(employeeDAO.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Employee does not exist : " + id));
 
 
         employeeDAO.delete(id);
@@ -227,23 +175,10 @@ public class EmployeeServiceImpl implements EmployeeService {
                 employeeDAO.searchByName(name);
 
 
-
-        List<EmployeeResponse> response =
-                new ArrayList<EmployeeResponse>();
-
-
-
-        for(Employee employee : employees) {
-
-
-            response.add(
-                    convertToResponse(employee));
-
-        }
-
-
-
-        return response;
+        // SRAO: Replaced traditional for-each loop with Stream API for mapping and collecting.
+        return employees.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
 
     }
 
@@ -261,26 +196,10 @@ public class EmployeeServiceImpl implements EmployeeService {
                         departmentId);
 
 
-
-        List<EmployeeResponse> response =
-                new ArrayList<EmployeeResponse>();
-
-
-
-        for(int i = 0;
-            i < employees.size();
-            i++) {
-
-
-            response.add(
-                    convertToResponse(
-                            employees.get(i)));
-
-        }
-
-
-
-        return response;
+        // SRAO: Replaced traditional for-loop with Stream API for mapping and collecting.
+        return employees.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
 
     }
 
@@ -297,8 +216,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
 
-        StringBuffer buffer =
-                new StringBuffer();
+        // SRAO: Replaced StringBuffer with StringBuilder for better performance in a non-thread-safe context.
+        StringBuilder buffer =
+                new StringBuilder();
 
 
 
@@ -309,40 +229,11 @@ public class EmployeeServiceImpl implements EmployeeService {
                 "================\n");
 
 
-
-        for(int i = 0;
-            i < employees.size();
-            i++) {
-
-
-
-            Employee employee =
-                    employees.get(i);
-
-
-
-            buffer.append(
-                    employee.getId());
-
-
-            buffer.append(" - ");
-
-
-            buffer.append(
-                    employee.getFirstName());
-
-
-            buffer.append(" ");
-
-
-            buffer.append(
-                    employee.getLastName());
-
-
-            buffer.append("\n");
-
-        }
-
+        // SRAO: Replaced traditional for-loop with Stream API and Collectors.joining for report generation.
+        String employeeDetails = employees.stream()
+                .map(employee -> employee.getId() + " - " + employee.getFirstName() + " " + employee.getLastName())
+                .collect(Collectors.joining("\n"));
+        buffer.append(employeeDetails);
 
 
         return buffer.toString();
@@ -370,121 +261,110 @@ public class EmployeeServiceImpl implements EmployeeService {
     private EmployeeResponse convertToResponse(
             Employee employee) {
 
+        // SRAO: Replaced explicit null check with Optional.ofNullable for cleaner handling.
+        return Optional.ofNullable(employee)
+                .map(e -> {
+                    EmployeeResponse response =
+                            new EmployeeResponse();
 
 
-        if(employee == null) {
-
-            return null;
-
-        }
+                    response.setId(
+                            e.getId());
 
 
-
-        EmployeeResponse response =
-                new EmployeeResponse();
-
+                    response.setEmployeeCode(
+                            e.getEmployeeCode());
 
 
-        response.setId(
-                employee.getId());
+                    response.setFullName(
+                            e.getFirstName()
+                                    + " "
+                                    + e.getLastName());
 
 
-        response.setEmployeeCode(
-                employee.getEmployeeCode());
+                    response.setEmail(
+                            e.getEmail());
 
 
-        response.setFullName(
-                employee.getFirstName()
-                        + " "
-                        + employee.getLastName());
+                    response.setPhoneNumber(
+                            e.getPhoneNumber());
 
 
-        response.setEmail(
-                employee.getEmail());
+                    response.setDesignation(
+                            e.getDesignation());
 
 
-        response.setPhoneNumber(
-                employee.getPhoneNumber());
+                    response.setSalary(
+                            e.getSalary());
 
 
-        response.setDesignation(
-                employee.getDesignation());
+                    response.setJoiningDate(
+                            e.getJoiningDate());
 
 
-        response.setSalary(
-                employee.getSalary());
+                    response.setStatus(
+                            e.getStatus());
 
 
-        response.setJoiningDate(
-                employee.getJoiningDate());
+                    response.setManager(
+                            e.isManager());
 
 
-        response.setStatus(
-                employee.getStatus());
+                    response.setSkills(
+                            e.getSkills());
 
 
-        response.setManager(
-                employee.isManager());
+                    // SRAO: Replaced explicit null check with Optional.ofNullable and ifPresent.
+                    Optional.ofNullable(e.getDepartment()).ifPresent(dept -> {
 
 
-        response.setSkills(
-                employee.getSkills());
-
-
-
-        if(employee.getDepartment() != null) {
-
-
-            DepartmentResponse department =
-                    new DepartmentResponse();
+                        DepartmentResponse department =
+                                new DepartmentResponse();
 
 
 
-            department.setId(
-                    employee.getDepartment()
-                            .getId());
+                        department.setId(
+                                dept.getId());
 
 
-            department.setName(
-                    employee.getDepartment()
-                            .getName());
+                        department.setName(
+                                dept.getName());
 
 
-            department.setLocation(
-                    employee.getDepartment()
-                            .getLocation());
+                        department.setLocation(
+                                dept.getLocation());
 
 
-            department.setActive(
-                    employee.getDepartment()
-                            .getActive());
+                        department.setActive(
+                                dept.getActive());
 
 
 
-            response.setDepartment(
-                    department);
+                        response.setDepartment(
+                                department);
 
-        }
-
-
-
-        if(employee.getAddress() != null) {
-
-
-            response.setCity(
-                    employee.getAddress()
-                            .getCity());
-
-
-            response.setCountry(
-                    employee.getAddress()
-                            .getCountry());
-
-        }
+                    });
 
 
 
-        return response;
+                    // SRAO: Replaced explicit null check with Optional.ofNullable and ifPresent.
+                    Optional.ofNullable(e.getAddress()).ifPresent(address -> {
+
+
+                        response.setCity(
+                                address.getCity());
+
+
+                        response.setCountry(
+                                address.getCountry());
+
+                    });
+
+
+
+                    return response;
+                })
+                .orElse(null); // If the initial employee is null, return null as per original logic.
 
     }
 
