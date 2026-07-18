@@ -6,6 +6,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.stream.Collectors; // SRAO: Added for Stream API operations
+import java.util.Objects; // SRAO: Added for Objects::nonNull
 
 import org.springframework.stereotype.Repository;
 
@@ -36,32 +38,13 @@ public class EmployeeDAOImpl implements EmployeeDAO {
 
     @Override
     public synchronized List<Employee> findAll() {
-
-
-        List<Employee> employeeList =
-                new ArrayList<Employee>();
-
-
-        for (int i = 0; i < employees.size(); i++) {
-
-            Employee employee =
-                    employees.get(i);
-
-            employeeList.add(employee);
-
-        }
-
-
-        return employeeList;
-
+        // SRAO: Replaced traditional for-loop with Stream API for collection transformation
+        return employees.stream().collect(Collectors.toList());
     }
 
 
     @Override
     public synchronized Employee findById(Integer id) {
-
-
-        Employee result = null;
 
 
         if (id == null) {
@@ -71,32 +54,13 @@ public class EmployeeDAOImpl implements EmployeeDAO {
         }
 
 
-        Iterator<Employee> iterator =
-                employees.iterator();
-
-
-        while (iterator.hasNext()) {
-
-
-            Employee employee =
-                    iterator.next();
-
-
-            if (employee != null
-                    && employee.getId() != null
-                    && employee.getId().equals(id)) {
-
-
-                result = employee;
-
-                break;
-
-            }
-
-        }
-
-
-        return result;
+        // SRAO: Replaced traditional while-loop with Iterator with Stream API for finding an element
+        return employees.stream()
+                .filter(employee -> employee != null
+                        && employee.getId() != null
+                        && employee.getId().equals(id))
+                .findFirst()
+                .orElse(null);
 
     }
 
@@ -145,6 +109,7 @@ public class EmployeeDAOImpl implements EmployeeDAO {
         }
 
 
+        // SRAO: Kept traditional for-loop as Stream API is not suitable for in-place modification of Vector by index
         for (int i = 0;
              i < employees.size();
              i++) {
@@ -186,6 +151,7 @@ public class EmployeeDAOImpl implements EmployeeDAO {
         }
 
 
+        // SRAO: Kept traditional while-loop with Iterator as Stream API is not suitable for in-place removal using Iterator.remove()
         Iterator<Employee> iterator =
                 employees.iterator();
 
@@ -219,50 +185,21 @@ public class EmployeeDAOImpl implements EmployeeDAO {
     public synchronized List<Employee> searchByName(String name) {
 
 
-        List<Employee> result =
-                new ArrayList<Employee>();
-
-
         if (name == null) {
 
-            return result;
+            return new ArrayList<>(); // SRAO: Replaced traditional for-loop with Stream API for filtering
 
         }
 
 
-        for (int i = 0;
-             i < employees.size();
-             i++) {
+        final String lowerCaseName = name.toLowerCase();
 
-
-            Employee employee =
-                    employees.get(i);
-
-
-            if (employee != null) {
-
-
-                String fullName =
-                        employee.getFirstName()
-                                + " "
-                                + employee.getLastName();
-
-
-                if (fullName
-                        .toLowerCase()
-                        .contains(name.toLowerCase())) {
-
-
-                    result.add(employee);
-
-                }
-
-            }
-
-        }
-
-
-        return result;
+        return employees.stream()
+                .filter(employee -> employee != null
+                        && employee.getFirstName() != null
+                        && employee.getLastName() != null
+                        && (employee.getFirstName() + " " + employee.getLastName()).toLowerCase().contains(lowerCaseName))
+                .collect(Collectors.toList());
 
     }
 
@@ -273,72 +210,32 @@ public class EmployeeDAOImpl implements EmployeeDAO {
             Integer departmentId) {
 
 
-        List<Employee> result =
-                new ArrayList<Employee>();
-
-
         if (departmentId == null) {
 
-            return result;
+            return new ArrayList<>(); // SRAO: Replaced traditional while-loop with Iterator with Stream API for filtering
 
         }
 
 
-
-        Iterator<Employee> iterator =
-                employees.iterator();
-
-
-
-        while (iterator.hasNext()) {
-
-
-            Employee employee =
-                    iterator.next();
-
-
-            if (employee != null
-                    && employee.getDepartment() != null
-                    && employee.getDepartment()
-                    .getId()
-                    .equals(departmentId)) {
-
-
-                result.add(employee);
-
-            }
-
-        }
-
-
-        return result;
+        return employees.stream()
+                .filter(employee -> employee != null
+                        && employee.getDepartment() != null
+                        && employee.getDepartment().getId() != null
+                        && employee.getDepartment().getId().equals(departmentId))
+                .collect(Collectors.toList());
 
     }
 
 
 
     @Override
-    public int count() {
+    public synchronized int count() {
 
 
-        int count = 0;
-
-
-        for (int i = 0;
-             i < employees.size();
-             i++) {
-
-
-            if (employees.get(i) != null) {
-
-                count++;
-
-            }
-
-        }
-
-
-        return count;
+        // SRAO: Replaced traditional for-loop with Stream API for counting elements
+        return (int) employees.stream()
+                .filter(Objects::nonNull)
+                .count();
 
     }
 
@@ -352,33 +249,10 @@ public class EmployeeDAOImpl implements EmployeeDAO {
     public List<Employee> sortByName() {
 
 
-        List<Employee> employeeList =
-                findAll();
-
-
-
-        Collections.sort(
-                employeeList,
-                new Comparator<Employee>() {
-
-
-                    @Override
-                    public int compare(
-                            Employee e1,
-                            Employee e2) {
-
-
-                        return e1.getFirstName()
-                                .compareTo(
-                                        e2.getFirstName());
-
-                    }
-
-                });
-
-
-
-        return employeeList;
+        // SRAO: Replaced Collections.sort with anonymous Comparator with Stream API and lambda Comparator
+        return findAll().stream()
+                .sorted(Comparator.comparing(Employee::getFirstName))
+                .collect(Collectors.toList());
 
     }
 
@@ -390,41 +264,11 @@ public class EmployeeDAOImpl implements EmployeeDAO {
     public String generateEmployeeSummary() {
 
 
-        StringBuffer buffer =
-                new StringBuffer();
-
-
-        for (int i = 0;
-             i < employees.size();
-             i++) {
-
-
-            Employee employee =
-                    employees.get(i);
-
-
-            if (employee != null) {
-
-
-                buffer.append(
-                        employee.getId());
-
-
-                buffer.append(" - ");
-
-
-                buffer.append(
-                        employee.getFirstName());
-
-
-                buffer.append("\n");
-
-            }
-
-        }
-
-
-        return buffer.toString();
+        // SRAO: Replaced traditional for-loop with StringBuffer with Stream API for string aggregation
+        return employees.stream()
+                .filter(Objects::nonNull)
+                .map(employee -> employee.getId() + " - " + employee.getFirstName())
+                .collect(Collectors.joining("\n"));
 
     }
 

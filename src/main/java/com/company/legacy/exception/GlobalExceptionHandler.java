@@ -208,8 +208,8 @@ public class GlobalExceptionHandler {
         public String toString() {
 
 
-            StringBuffer buffer =
-                    new StringBuffer();
+            StringBuilder buffer = // SRAO: Replaced StringBuffer with StringBuilder for better performance in a non-thread-safe context.
+                    new StringBuilder();
 
 
             buffer.append("ErrorResponse [");
