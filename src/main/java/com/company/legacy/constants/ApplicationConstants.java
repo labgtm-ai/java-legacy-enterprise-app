@@ -1,5 +1,7 @@
 package com.company.legacy.constants;
 
+import java.time.format.DateTimeFormatter;
+
 /**
  * Legacy application constants.
  *
@@ -32,7 +34,8 @@ public interface ApplicationConstants {
     String EMPLOYEE_DELETED = "Employee deleted successfully.";
 
     // Date Format
-    String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
+    // SRAO: Replaced String date format with a DateTimeFormatter instance for modern date handling.
+    DateTimeFormatter DEFAULT_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     // Report
     String REPORT_FILE_NAME = "employee-report.csv";

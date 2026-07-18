@@ -1,6 +1,6 @@
 package com.company.legacy.exception;
 
-import java.util.Date;
+import java.time.Instant; // SRAO: Replaced java.util.Date with java.time.Instant for modern date handling.
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
 
 
         response.setTimestamp(
-                new Date());
+                Instant.now()); // SRAO: Replaced new Date() with Instant.now().
 
 
         response.setStatus(
@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
 
 
         response.setTimestamp(
-                new Date());
+                Instant.now()); // SRAO: Replaced new Date() with Instant.now().
 
 
         response.setStatus(
@@ -105,7 +105,7 @@ public class GlobalExceptionHandler {
 
 
         response.setTimestamp(
-                new Date());
+                Instant.now()); // SRAO: Replaced new Date() with Instant.now().
 
 
         response.setStatus(
@@ -140,7 +140,7 @@ public class GlobalExceptionHandler {
     public static class ErrorResponse {
 
 
-        private Date timestamp;
+        private Instant timestamp; // SRAO: Changed type from Date to Instant.
 
         private int status;
 
@@ -156,13 +156,13 @@ public class GlobalExceptionHandler {
 
 
 
-        public Date getTimestamp() {
+        public Instant getTimestamp() { // SRAO: Changed return type from Date to Instant.
             return timestamp;
         }
 
 
 
-        public void setTimestamp(Date timestamp) {
+        public void setTimestamp(Instant timestamp) { // SRAO: Changed parameter type from Date to Instant.
             this.timestamp = timestamp;
         }
 
@@ -208,15 +208,15 @@ public class GlobalExceptionHandler {
         public String toString() {
 
 
-            StringBuffer buffer =
-                    new StringBuffer();
+            StringBuilder buffer = // SRAO: Replaced StringBuffer with StringBuilder for performance.
+                    new StringBuilder();
 
 
             buffer.append("ErrorResponse [");
 
 
             buffer.append("timestamp=");
-            buffer.append(timestamp);
+            buffer.append(timestamp); // SRAO: Instant's toString() is suitable for direct appending.
 
 
             buffer.append(", status=");

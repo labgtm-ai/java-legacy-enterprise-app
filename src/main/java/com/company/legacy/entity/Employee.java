@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 public class Employee implements Serializable {
 
@@ -92,11 +93,8 @@ public class Employee implements Serializable {
         this.lastModifiedDate = lastModifiedDate;
         this.status = status;
         this.manager = manager;
-        this.skills = skills;
-
-        if (this.skills == null) {
-            this.skills = new ArrayList<String>();
-        }
+        // SRAO: Replace explicit null check with Optional.ofNullable for default value assignment
+        this.skills = Optional.ofNullable(skills).orElseGet(ArrayList::new);
 
     }
 
@@ -233,10 +231,8 @@ public class Employee implements Serializable {
         builder.append(", designation=").append(designation);
         builder.append(", status=").append(status);
 
-        if (department != null) {
-            builder.append(", department=");
-            builder.append(department.getName());
-        }
+        // SRAO: Replace explicit null check with Optional.ofNullable for conditional action
+        Optional.ofNullable(department).ifPresent(d -> builder.append(", department=").append(d.getName()));
 
         builder.append("]");
 
@@ -257,11 +253,8 @@ public class Employee implements Serializable {
 
         Employee other = (Employee) obj;
 
-        if (id == null) {
-            return other.id == null;
-        }
-
-        return id.equals(other.id);
+        // SRAO: Replace explicit null check with Optional for comparison
+        return Optional.ofNullable(this.id).equals(Optional.ofNullable(other.id));
     }
 
     @Override
@@ -271,7 +264,8 @@ public class Employee implements Serializable {
 
         int result = 1;
 
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        // SRAO: Replace explicit null check with Optional for hashCode calculation
+        result = prime * result + Optional.ofNullable(id).map(Object::hashCode).orElse(0);
 
         return result;
     }
