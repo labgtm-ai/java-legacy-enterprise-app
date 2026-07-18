@@ -230,7 +230,8 @@ public class EmployeeRequest implements Serializable {
     @Override
     public String toString() {
 
-        StringBuffer buffer = new StringBuffer();
+        // SRAO: Replaced StringBuffer with StringBuilder for performance in a non-thread-safe context.
+        StringBuilder buffer = new StringBuilder();
 
         buffer.append("EmployeeRequest [");
         buffer.append("employeeCode=");
