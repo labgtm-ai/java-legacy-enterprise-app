@@ -1,12 +1,21 @@
 package com.company.legacy.repository;
 
 import java.util.Date;
-import java.util.Hashtable;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Vector;
+
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.company.legacy.entity.Department;
 import com.company.legacy.entity.Employee;
+import java.util.Hashtable;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.Instant;
+
 
 /**
  * Simulates a legacy in-memory database.
@@ -16,11 +25,11 @@ import com.company.legacy.entity.Employee;
  */
 public final class FakeDatabase {
 
-    private static final Vector<Employee> EMPLOYEES =
-            new Vector<Employee>();
+    private static final List<Employee> EMPLOYEES =
+            new ArrayList<Employee>();
 
-    private static final Hashtable<Integer, Department> DEPARTMENTS =
-            new Hashtable<Integer, Department>();
+    private static final HashMap<Integer, Department> DEPARTMENTS =
+            new HashMap<Integer, Department>();
 
     static {
 
@@ -65,7 +74,7 @@ public final class FakeDatabase {
         emp1.setEmail("john.smith@company.com");
         emp1.setSalary(95000.00);
         emp1.setDepartment(DEPARTMENTS.get(1));
-        emp1.setJoiningDate(new Date());
+        emp1.setJoiningDate(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
 
         Employee emp2 = new Employee();
         emp2.setId(1002);
@@ -74,7 +83,7 @@ public final class FakeDatabase {
         emp2.setEmail("mary.johnson@company.com");
         emp2.setSalary(87000.00);
         emp2.setDepartment(DEPARTMENTS.get(2));
-        emp2.setJoiningDate(new Date());
+        emp2.setJoiningDate(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
 
         Employee emp3 = new Employee();
         emp3.setId(1003);
@@ -83,7 +92,7 @@ public final class FakeDatabase {
         emp3.setEmail("david.wilson@company.com");
         emp3.setSalary(120000.00);
         emp3.setDepartment(DEPARTMENTS.get(1));
-        emp3.setJoiningDate(new Date());
+        emp3.setJoiningDate(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
 
         EMPLOYEES.add(emp1);
         EMPLOYEES.add(emp2);
@@ -93,22 +102,21 @@ public final class FakeDatabase {
 
     public static synchronized Vector<Employee> getEmployees() {
 
-        return EMPLOYEES;
+        return new Vector<>(EMPLOYEES);
 
     }
 
     public static synchronized Hashtable<Integer, Department> getDepartments() {
-
-        return DEPARTMENTS;
+        return new Hashtable<>(DEPARTMENTS);
 
     }
 
-    private static Vector<Employee> employees =
-            new Vector<Employee>();
+    private static List<Employee> employees =
+            new ArrayList<Employee>();
 
 
-    private static Hashtable<Integer, Department> departments =
-            new Hashtable<Integer, Department>();
+    private static ConcurrentHashMap<Integer, Department> departments =
+            new ConcurrentHashMap<Integer, Department>();
 
 
 
@@ -127,22 +135,8 @@ public final class FakeDatabase {
 
 
         if(employeeList != null) {
-
-
-            for(int i = 0;
-                i < employeeList.size();
-                i++) {
-
-
-                Employee employee =
-                        employeeList.get(i);
-
-
-
-                employees.add(employee);
-
-            }
-
+            // SRAO: Replaced traditional for-loop with Stream API's forEach for conciseness.
+            employeeList.forEach(employees::add);
         }
 
 
@@ -166,33 +160,12 @@ public final class FakeDatabase {
 
 
         if(departmentList != null) {
-
-
-            for(int i = 0;
-                i < departmentList.size();
-                i++) {
-
-
-                Department department =
-                        departmentList.get(i);
-
-
-
-                departments.put(
-                        department.getId(),
-                        department);
-
-            }
-
+            // SRAO: Replaced traditional for-loop with Stream API's forEach for conciseness.
+            departmentList.forEach(department -> departments.put(department.getId(), department));
         }
 
 
     }
-
-
-
-
-
 
 
 

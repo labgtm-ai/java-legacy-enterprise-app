@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 public class Employee implements Serializable {
 
@@ -92,11 +93,8 @@ public class Employee implements Serializable {
         this.lastModifiedDate = lastModifiedDate;
         this.status = status;
         this.manager = manager;
-        this.skills = skills;
-
-        if (this.skills == null) {
-            this.skills = new ArrayList<String>();
-        }
+        // SRAO: Replaced explicit null check with Optional.ofNullable and orElseGet for skills initialization.
+        this.skills = Optional.ofNullable(skills).orElseGet(ArrayList::new);
 
     }
 
@@ -252,10 +250,9 @@ public class Employee implements Serializable {
         if (obj == null)
             return false;
 
-        if (!(obj instanceof Employee))
+        // SRAO: Using pattern matching for instanceof to safely cast and declare 'other'
+        if (!(obj instanceof Employee other))
             return false;
-
-        Employee other = (Employee) obj;
 
         if (id == null) {
             return other.id == null;

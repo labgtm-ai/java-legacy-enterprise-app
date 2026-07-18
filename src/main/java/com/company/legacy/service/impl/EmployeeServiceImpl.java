@@ -3,6 +3,8 @@ package com.company.legacy.service.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,9 +27,12 @@ import com.company.legacy.service.EmployeeService;
 public class EmployeeServiceImpl implements EmployeeService {
 
 
-    @Autowired
-    private EmployeeDAO employeeDAO;
+    private final EmployeeDAO employeeDAO;
 
+    // SRAO: Replaced field injection with constructor injection.
+    public EmployeeServiceImpl(EmployeeDAO employeeDAO) {
+        this.employeeDAO = employeeDAO;
+    }
 
 
     @Override
@@ -38,29 +43,10 @@ public class EmployeeServiceImpl implements EmployeeService {
                 employeeDAO.findAll();
 
 
-        List<EmployeeResponse> responseList =
-                new ArrayList<EmployeeResponse>();
-
-
-        for (int i = 0;
-             i < employees.size();
-             i++) {
-
-
-            Employee employee =
-                    employees.get(i);
-
-
-            EmployeeResponse response =
-                    convertToResponse(employee);
-
-
-            responseList.add(response);
-
-        }
-
-
-        return responseList;
+        // SRAO: Replaced traditional for-loop with Stream API.
+        return employees.stream()
+                .map(this::convertToResponse)
+                .toList();
 
     }
 
@@ -68,26 +54,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeResponse getEmployeeById(Integer id) {
-
-
-        Employee employee =
-                employeeDAO.findById(id);
-
-
-
-        if (employee == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Employee not found with id : "
-                            + id);
-
-        }
-
-
-
-        return convertToResponse(employee);
-
+        // SRAO: Replaced explicit null check with Optional.
+        return Optional.ofNullable(employeeDAO.findById(id))
+                .map(this::convertToResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id : " + id));
     }
 
 
@@ -129,22 +99,9 @@ public class EmployeeServiceImpl implements EmployeeService {
             Integer id,
             EmployeeRequest request) {
 
-
-
-        Employee existing =
-                employeeDAO.findById(id);
-
-
-
-        if (existing == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Employee not found : "
-                            + id);
-
-        }
-
+        // SRAO: Replaced explicit null check with Optional.
+        Employee existing = Optional.ofNullable(employeeDAO.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found : " + id));
 
 
         existing.setFirstName(
@@ -189,31 +146,17 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
 
-
     @Override
     public void deleteEmployee(Integer id) {
 
-
-        Employee employee =
-                employeeDAO.findById(id);
-
-
-
-        if (employee == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Employee does not exist : "
-                            + id);
-
-        }
-
+        // SRAO: Replaced explicit null check with Optional.
+        Optional.ofNullable(employeeDAO.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Employee does not exist : " + id));
 
 
         employeeDAO.delete(id);
 
     }
-
 
 
 
@@ -228,25 +171,12 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
 
-        List<EmployeeResponse> response =
-                new ArrayList<EmployeeResponse>();
-
-
-
-        for(Employee employee : employees) {
-
-
-            response.add(
-                    convertToResponse(employee));
-
-        }
-
-
-
-        return response;
+        // SRAO: Replaced enhanced for-loop with Stream API.
+        return employees.stream()
+                .map(this::convertToResponse)
+                .toList();
 
     }
-
 
 
 
@@ -262,28 +192,12 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
 
-        List<EmployeeResponse> response =
-                new ArrayList<EmployeeResponse>();
-
-
-
-        for(int i = 0;
-            i < employees.size();
-            i++) {
-
-
-            response.add(
-                    convertToResponse(
-                            employees.get(i)));
-
-        }
-
-
-
-        return response;
+        // SRAO: Replaced traditional for-loop with Stream API.
+        return employees.stream()
+                .map(this::convertToResponse)
+                .toList();
 
     }
-
 
 
 
@@ -296,59 +210,16 @@ public class EmployeeServiceImpl implements EmployeeService {
                 employeeDAO.findAll();
 
 
+        // SRAO: Replaced for-loop with Stream API for report generation.
+        String employeeDetails = employees.stream()
+                .map(employee -> employee.getId() + " - " + employee.getFirstName() + " " + employee.getLastName())
+                .collect(Collectors.joining("\n"));
 
-        StringBuffer buffer =
-                new StringBuffer();
-
-
-
-        buffer.append(
-                "Employee Report\n");
-
-        buffer.append(
-                "================\n");
-
-
-
-        for(int i = 0;
-            i < employees.size();
-            i++) {
-
-
-
-            Employee employee =
-                    employees.get(i);
-
-
-
-            buffer.append(
-                    employee.getId());
-
-
-            buffer.append(" - ");
-
-
-            buffer.append(
-                    employee.getFirstName());
-
-
-            buffer.append(" ");
-
-
-            buffer.append(
-                    employee.getLastName());
-
-
-            buffer.append("\n");
-
-        }
-
-
-
-        return buffer.toString();
+        return "Employee Report\n" +
+               "================\n" +
+               employeeDetails;
 
     }
-
 
 
 
@@ -363,131 +234,47 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
 
-
     /**
      * Convert Entity to Response DTO.
      */
     private EmployeeResponse convertToResponse(
             Employee employee) {
 
+        // SRAO: Replaced explicit null check with Optional.
+        return Optional.ofNullable(employee)
+                .map(emp -> {
+                    EmployeeResponse response = new EmployeeResponse();
 
+                    response.setId(emp.getId());
+                    response.setEmployeeCode(emp.getEmployeeCode());
+                    response.setFullName(emp.getFirstName() + " " + emp.getLastName());
+                    response.setEmail(emp.getEmail());
+                    response.setPhoneNumber(emp.getPhoneNumber());
+                    response.setDesignation(emp.getDesignation());
+                    response.setSalary(emp.getSalary());
+                    response.setJoiningDate(emp.getJoiningDate());
+                    response.setStatus(emp.getStatus());
+                    response.setManager(emp.isManager());
+                    response.setSkills(emp.getSkills());
 
-        if(employee == null) {
+                    // Nested null checks for department and address
+                    Optional.ofNullable(emp.getDepartment()).ifPresent(dept -> {
+                        DepartmentResponse department = new DepartmentResponse();
+                        department.setId(dept.getId());
+                        department.setName(dept.getName());
+                        department.setLocation(dept.getLocation());
+                        department.setActive(dept.getActive());
+                        response.setDepartment(department);
+                    });
 
-            return null;
-
-        }
-
-
-
-        EmployeeResponse response =
-                new EmployeeResponse();
-
-
-
-        response.setId(
-                employee.getId());
-
-
-        response.setEmployeeCode(
-                employee.getEmployeeCode());
-
-
-        response.setFullName(
-                employee.getFirstName()
-                        + " "
-                        + employee.getLastName());
-
-
-        response.setEmail(
-                employee.getEmail());
-
-
-        response.setPhoneNumber(
-                employee.getPhoneNumber());
-
-
-        response.setDesignation(
-                employee.getDesignation());
-
-
-        response.setSalary(
-                employee.getSalary());
-
-
-        response.setJoiningDate(
-                employee.getJoiningDate());
-
-
-        response.setStatus(
-                employee.getStatus());
-
-
-        response.setManager(
-                employee.isManager());
-
-
-        response.setSkills(
-                employee.getSkills());
-
-
-
-        if(employee.getDepartment() != null) {
-
-
-            DepartmentResponse department =
-                    new DepartmentResponse();
-
-
-
-            department.setId(
-                    employee.getDepartment()
-                            .getId());
-
-
-            department.setName(
-                    employee.getDepartment()
-                            .getName());
-
-
-            department.setLocation(
-                    employee.getDepartment()
-                            .getLocation());
-
-
-            department.setActive(
-                    employee.getDepartment()
-                            .getActive());
-
-
-
-            response.setDepartment(
-                    department);
-
-        }
-
-
-
-        if(employee.getAddress() != null) {
-
-
-            response.setCity(
-                    employee.getAddress()
-                            .getCity());
-
-
-            response.setCountry(
-                    employee.getAddress()
-                            .getCountry());
-
-        }
-
-
-
-        return response;
-
+                    Optional.ofNullable(emp.getAddress()).ifPresent(address -> {
+                        response.setCity(address.getCity());
+                        response.setCountry(address.getCountry());
+                    });
+                    return response;
+                })
+                .orElse(null);
     }
-
 
 
 

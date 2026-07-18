@@ -3,10 +3,12 @@ package com.company.legacy.dao.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
@@ -25,80 +27,42 @@ import com.company.legacy.repository.FakeDatabase;
 public class DepartmentDAOImpl implements DepartmentDAO {
 
 
-    private Hashtable<Integer, Department> departments;
+    // SRAO: Replaced Hashtable with ConcurrentHashMap for better concurrency and performance.
+    private ConcurrentHashMap<Integer, Department> departments;
 
 
     public DepartmentDAOImpl() {
-
-        departments =
-                FakeDatabase.getDepartments();
-
+        // SRAO: Converted the Hashtable returned by FakeDatabase to a ConcurrentHashMap.
+        departments = new ConcurrentHashMap<>(FakeDatabase.getDepartments());
     }
 
 
 
     @Override
-    public synchronized List<Department> findAll() {
-
-
-        List<Department> departmentList =
-                new ArrayList<Department>();
-
-
-        Iterator<Map.Entry<Integer, Department>> iterator =
-                departments.entrySet().iterator();
-
-
-
-        while (iterator.hasNext()) {
-
-
-            Map.Entry<Integer, Department> entry =
-                    iterator.next();
-
-
-            Department department =
-                    entry.getValue();
-
-
-            if (department != null) {
-
-                departmentList.add(department);
-
-            }
-
-        }
-
-
-        return departmentList;
-
+    // SRAO: Removed synchronized keyword as ConcurrentHashMap handles thread safety internally.
+    public List<Department> findAll() {
+        // SRAO: Replaced explicit null check with Optional and streams for filtering non-null departments.
+        return departments.values().stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
 
 
     @Override
-    public synchronized Department findById(Integer id) {
-
-
-        if (id == null) {
-
-            return null;
-
-        }
-
-
-        Department department =
-                departments.get(id);
-
-
-        return department;
-
+    // SRAO: Removed synchronized keyword as ConcurrentHashMap handles thread safety internally.
+    public Department findById(Integer id) {
+        // SRAO: Replaced explicit null check with Optional for return value.
+        return Optional.ofNullable(id)
+                .map(departments::get)
+                .orElse(null);
     }
 
 
 
     @Override
-    public synchronized Department save(
+    // SRAO: Removed synchronized keyword as ConcurrentHashMap handles thread safety internally.
+    public Department save(
             Department department) {
 
 
@@ -135,7 +99,8 @@ public class DepartmentDAOImpl implements DepartmentDAO {
 
 
     @Override
-    public synchronized Department update(
+    // SRAO: Removed synchronized keyword as ConcurrentHashMap handles thread safety internally.
+    public Department update(
             Department department) {
 
 
@@ -148,35 +113,20 @@ public class DepartmentDAOImpl implements DepartmentDAO {
         }
 
 
-
-        Department existing =
-                departments.get(
-                        department.getId());
-
-
-
-        if (existing != null) {
-
-
-            departments.put(
-                    department.getId(),
-                    department);
-
-
-            return department;
-
-        }
-
-
-
-        return null;
-
+        // SRAO: Replaced explicit null check with Optional for conditional update.
+        return Optional.ofNullable(departments.get(department.getId()))
+                .map(existing -> {
+                    departments.put(department.getId(), department);
+                    return department;
+                })
+                .orElse(null);
     }
 
 
 
     @Override
-    public synchronized void delete(
+    // SRAO: Removed synchronized keyword as ConcurrentHashMap handles thread safety internally.
+    public void delete(
             Integer id) {
 
 
@@ -200,84 +150,34 @@ public class DepartmentDAOImpl implements DepartmentDAO {
 
 
     @Override
-    public synchronized List<Department> searchByName(
+    // SRAO: Removed synchronized keyword as ConcurrentHashMap handles thread safety internally.
+    public List<Department> searchByName(
             String name) {
 
 
-        List<Department> result =
-                new ArrayList<Department>();
-
-
+        // SRAO: Replaced explicit null checks with Optional and streams for filtering and processing.
         if (name == null) {
-
-            return result;
-
+            return new ArrayList<>();
         }
 
-
-
-        Iterator<Department> iterator =
-                departments.values()
-                        .iterator();
-
-
-
-        while (iterator.hasNext()) {
-
-
-            Department department =
-                    iterator.next();
-
-
-
-            if (department != null
-                    && department.getName() != null) {
-
-
-                if (department.getName()
-                        .toLowerCase()
-                        .contains(
-                                name.toLowerCase())) {
-
-
-                    result.add(department);
-
-                }
-
-            }
-
-        }
-
-
-        return result;
-
+        final String lowerCaseName = name.toLowerCase();
+        return departments.values().stream()
+                .filter(Objects::nonNull)
+                .filter(d -> Optional.ofNullable(d.getName())
+                        .map(n -> n.toLowerCase().contains(lowerCaseName))
+                        .orElse(false))
+                .collect(Collectors.toList());
     }
 
 
 
     @Override
+    // SRAO: Removed synchronized keyword as ConcurrentHashMap handles thread safety internally.
     public int count() {
-
-
-        int count = 0;
-
-
-
-        for (Integer key :
-                departments.keySet()) {
-
-
-            if (departments.get(key) != null) {
-
-                count++;
-
-            }
-
-        }
-
-
-        return count;
-
+        // SRAO: Replaced explicit null check with stream filtering for counting non-null departments.
+        return (int) departments.values().stream()
+                .filter(Objects::nonNull)
+                .count();
     }
 
 
@@ -285,37 +185,12 @@ public class DepartmentDAOImpl implements DepartmentDAO {
     /**
      * Legacy sorting method.
      */
+    // SRAO: Removed synchronized keyword as ConcurrentHashMap handles thread safety internally.
     public List<Department> sortByName() {
-
-
-        List<Department> list =
-                findAll();
-
-
-
-        Collections.sort(
-                list,
-                new Comparator<Department>() {
-
-
-                    @Override
-                    public int compare(
-                            Department d1,
-                            Department d2) {
-
-
-                        return d1.getName()
-                                .compareTo(
-                                        d2.getName());
-
-                    }
-
-                });
-
-
-
-        return list;
-
+        // SRAO: Replaced Collections.sort with Stream API for sorting.
+        return findAll().stream()
+                .sorted(Comparator.comparing(Department::getName))
+                .toList();
     }
 
 
@@ -323,52 +198,12 @@ public class DepartmentDAOImpl implements DepartmentDAO {
     /**
      * Legacy report generation.
      */
+    // SRAO: Removed synchronized keyword as ConcurrentHashMap handles thread safety internally.
     public String generateDepartmentSummary() {
-
-
-        StringBuffer buffer =
-                new StringBuffer();
-
-
-
-        Iterator<Department> iterator =
-                departments.values()
-                        .iterator();
-
-
-
-        while (iterator.hasNext()) {
-
-
-            Department department =
-                    iterator.next();
-
-
-
-            if (department != null) {
-
-
-                buffer.append(
-                        department.getId());
-
-
-                buffer.append(" - ");
-
-
-                buffer.append(
-                        department.getName());
-
-
-                buffer.append("\n");
-
-            }
-
-        }
-
-
-        return buffer.toString();
-
+        // SRAO: Replaced explicit null check with stream filtering and modern StringJoiner for summary generation.
+        return departments.values().stream()
+                .filter(Objects::nonNull)
+                .map(d -> d.getId() + " - " + d.getName())
+                .collect(Collectors.joining("\n"));
     }
-
-
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.time.Instant;
 
 import javax.annotation.PostConstruct;
 
@@ -70,10 +71,10 @@ public class DataInitializer {
         engineering.setActive(true);
 
         engineering.setCreatedDate(
-                new Date());
+                Date.from(Instant.now())); // SRAO: Replaced new Date() with Date.from(Instant.now()) for modern date API usage.
 
         engineering.setLastModifiedDate(
-                new Date());
+                Date.from(Instant.now()));
 
 
 
@@ -95,10 +96,10 @@ public class DataInitializer {
         finance.setActive(true);
 
         finance.setCreatedDate(
-                new Date());
+                Date.from(Instant.now()));
 
         finance.setLastModifiedDate(
-                new Date());
+                Date.from(Instant.now()));
 
 
 
@@ -159,7 +160,7 @@ public class DataInitializer {
                 false);
 
         employee1.setJoiningDate(
-                new Date());
+                Date.from(Instant.now()));
 
 
 
@@ -238,7 +239,7 @@ public class DataInitializer {
                 true);
 
         employee2.setJoiningDate(
-                new Date());
+                Date.from(Instant.now()));
 
 
 
