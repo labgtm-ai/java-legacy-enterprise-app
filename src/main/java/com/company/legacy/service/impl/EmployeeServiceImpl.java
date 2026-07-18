@@ -1,10 +1,10 @@
 package com.company.legacy.service.impl;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.company.legacy.dao.EmployeeDAO;
@@ -15,7 +15,6 @@ import com.company.legacy.entity.Employee;
 import com.company.legacy.exception.ResourceNotFoundException;
 import com.company.legacy.service.EmployeeService;
 
-
 /**
  * Legacy implementation of Employee Service.
  *
@@ -24,532 +23,150 @@ import com.company.legacy.service.EmployeeService;
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
 
+    private final EmployeeDAO employeeDAO; // SRAO: Changed to constructor injection and made final
 
-    @Autowired
-    private EmployeeDAO employeeDAO;
-
-
+    public EmployeeServiceImpl(EmployeeDAO employeeDAO) {
+        this.employeeDAO = employeeDAO;
+    }
 
     @Override
     public List<EmployeeResponse> getAllEmployees() {
-
-
-        List<Employee> employees =
-                employeeDAO.findAll();
-
-
-        List<EmployeeResponse> responseList =
-                new ArrayList<EmployeeResponse>();
-
-
-        for (int i = 0;
-             i < employees.size();
-             i++) {
-
-
-            Employee employee =
-                    employees.get(i);
-
-
-            EmployeeResponse response =
-                    convertToResponse(employee);
-
-
-            responseList.add(response);
-
-        }
-
-
-        return responseList;
-
+        List<Employee> employees = employeeDAO.findAll();
+        // SRAO: Replaced traditional for-loop with Stream API for mapping
+        return employees.stream()
+                .map(this::convertToResponse)
+                .toList(); // Java 16+
     }
-
-
 
     @Override
     public EmployeeResponse getEmployeeById(Integer id) {
-
-
-        Employee employee =
-                employeeDAO.findById(id);
-
-
-
-        if (employee == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Employee not found with id : "
-                            + id);
-
-        }
-
-
-
+        // SRAO: Replaced explicit null check with Optional.ofNullable and orElseThrow
+        Employee employee = Optional.ofNullable(employeeDAO.findById(id))
+                                    .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id : " + id));
         return convertToResponse(employee);
-
     }
 
-
-
     @Override
-    public EmployeeResponse createEmployee(
-            EmployeeRequest request) {
-
-
-        Employee employee =
-                convertToEntity(request);
-
-
-
+    public EmployeeResponse createEmployee(EmployeeRequest request) {
+        Employee employee = convertToEntity(request);
         employee.setStatus("ACTIVE");
-
-        employee.setJoiningDate(
-                new Date());
-
-        employee.setLastModifiedDate(
-                new Date());
-
-
-
-        Employee savedEmployee =
-                employeeDAO.save(employee);
-
-
-
+        employee.setJoiningDate(new Date());
+        employee.setLastModifiedDate(new Date());
+        Employee savedEmployee = employeeDAO.save(employee);
         return convertToResponse(savedEmployee);
-
     }
-
-
-
 
     @Override
-    public EmployeeResponse updateEmployee(
-            Integer id,
-            EmployeeRequest request) {
-
-
-
-        Employee existing =
-                employeeDAO.findById(id);
-
-
-
-        if (existing == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Employee not found : "
-                            + id);
-
-        }
-
-
-
-        existing.setFirstName(
-                request.getFirstName());
-
-
-        existing.setLastName(
-                request.getLastName());
-
-
-        existing.setEmail(
-                request.getEmail());
-
-
-        existing.setPhoneNumber(
-                request.getPhoneNumber());
-
-
-        existing.setDesignation(
-                request.getDesignation());
-
-
-        existing.setSalary(
-                request.getSalary());
-
-
-
-        existing.setLastModifiedDate(
-                new Date());
-
-
-
-        Employee updated =
-                employeeDAO.update(existing);
-
-
-
+    public EmployeeResponse updateEmployee(Integer id, EmployeeRequest request) {
+        // SRAO: Replaced explicit null check with Optional.ofNullable and orElseThrow
+        Employee existing = Optional.ofNullable(employeeDAO.findById(id))
+                                    .orElseThrow(() -> new ResourceNotFoundException("Employee not found : " + id));
+        existing.setFirstName(request.getFirstName());
+        existing.setLastName(request.getLastName());
+        existing.setEmail(request.getEmail());
+        existing.setPhoneNumber(request.getPhoneNumber());
+        existing.setDesignation(request.getDesignation());
+        existing.setSalary(request.getSalary());
+        existing.setLastModifiedDate(new Date());
+        Employee updated = employeeDAO.update(existing);
         return convertToResponse(updated);
-
     }
-
-
-
-
 
     @Override
     public void deleteEmployee(Integer id) {
-
-
-        Employee employee =
-                employeeDAO.findById(id);
-
-
-
-        if (employee == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Employee does not exist : "
-                            + id);
-
-        }
-
-
-
+        // SRAO: Replaced explicit null check with Optional.ofNullable and orElseThrow
+        Optional.ofNullable(employeeDAO.findById(id))
+                .orElseThrow(() -> new ResourceNotFoundException("Employee does not exist : " + id));
         employeeDAO.delete(id);
-
     }
-
-
-
-
 
     @Override
-    public List<EmployeeResponse> searchEmployees(
-            String name) {
-
-
-        List<Employee> employees =
-                employeeDAO.searchByName(name);
-
-
-
-        List<EmployeeResponse> response =
-                new ArrayList<EmployeeResponse>();
-
-
-
-        for(Employee employee : employees) {
-
-
-            response.add(
-                    convertToResponse(employee));
-
-        }
-
-
-
-        return response;
-
+    public List<EmployeeResponse> searchEmployees(String name) {
+        List<Employee> employees = employeeDAO.searchByName(name);
+        // SRAO: Replaced traditional for-each loop with Stream API for mapping
+        return employees.stream()
+                .map(this::convertToResponse)
+                .toList(); // Java 16+
     }
-
-
-
-
 
     @Override
-    public List<EmployeeResponse> getEmployeesByDepartment(
-            Integer departmentId) {
-
-
-        List<Employee> employees =
-                employeeDAO.findByDepartment(
-                        departmentId);
-
-
-
-        List<EmployeeResponse> response =
-                new ArrayList<EmployeeResponse>();
-
-
-
-        for(int i = 0;
-            i < employees.size();
-            i++) {
-
-
-            response.add(
-                    convertToResponse(
-                            employees.get(i)));
-
-        }
-
-
-
-        return response;
-
+    public List<EmployeeResponse> getEmployeesByDepartment(Integer departmentId) {
+        List<Employee> employees = employeeDAO.findByDepartment(departmentId);
+        // SRAO: Replaced traditional for-loop with Stream API for mapping
+        return employees.stream()
+                .map(this::convertToResponse)
+                .toList(); // Java 16+
     }
-
-
-
-
 
     @Override
     public String generateEmployeeReport() {
+        List<Employee> employees = employeeDAO.findAll();
+        // SRAO: Replaced traditional for-loop with Stream API for report generation
+        String employeeDetails = employees.stream()
+                .map(employee -> employee.getId() + " - " + employee.getFirstName() + " " + employee.getLastName())
+                .collect(Collectors.joining("\n"));
 
-
-        List<Employee> employees =
-                employeeDAO.findAll();
-
-
-
-        StringBuffer buffer =
-                new StringBuffer();
-
-
-
-        buffer.append(
-                "Employee Report\n");
-
-        buffer.append(
-                "================\n");
-
-
-
-        for(int i = 0;
-            i < employees.size();
-            i++) {
-
-
-
-            Employee employee =
-                    employees.get(i);
-
-
-
-            buffer.append(
-                    employee.getId());
-
-
-            buffer.append(" - ");
-
-
-            buffer.append(
-                    employee.getFirstName());
-
-
-            buffer.append(" ");
-
-
-            buffer.append(
-                    employee.getLastName());
-
-
-            buffer.append("\n");
-
-        }
-
-
-
-        return buffer.toString();
-
+        return "Employee Report\n" +
+               "================\n" +
+               employeeDetails;
     }
-
-
-
-
 
     @Override
     public int getEmployeeCount() {
-
         return employeeDAO.count();
-
     }
-
-
-
-
 
     /**
      * Convert Entity to Response DTO.
      */
-    private EmployeeResponse convertToResponse(
-            Employee employee) {
-
-
-
-        if(employee == null) {
-
-            return null;
-
-        }
-
-
-
-        EmployeeResponse response =
-                new EmployeeResponse();
-
-
-
-        response.setId(
-                employee.getId());
-
-
-        response.setEmployeeCode(
-                employee.getEmployeeCode());
-
-
-        response.setFullName(
-                employee.getFirstName()
-                        + " "
-                        + employee.getLastName());
-
-
-        response.setEmail(
-                employee.getEmail());
-
-
-        response.setPhoneNumber(
-                employee.getPhoneNumber());
-
-
-        response.setDesignation(
-                employee.getDesignation());
-
-
-        response.setSalary(
-                employee.getSalary());
-
-
-        response.setJoiningDate(
-                employee.getJoiningDate());
-
-
-        response.setStatus(
-                employee.getStatus());
-
-
-        response.setManager(
-                employee.isManager());
-
-
-        response.setSkills(
-                employee.getSkills());
-
-
-
-        if(employee.getDepartment() != null) {
-
-
-            DepartmentResponse department =
-                    new DepartmentResponse();
-
-
-
-            department.setId(
-                    employee.getDepartment()
-                            .getId());
-
-
-            department.setName(
-                    employee.getDepartment()
-                            .getName());
-
-
-            department.setLocation(
-                    employee.getDepartment()
-                            .getLocation());
-
-
-            department.setActive(
-                    employee.getDepartment()
-                            .getActive());
-
-
-
-            response.setDepartment(
-                    department);
-
-        }
-
-
-
-        if(employee.getAddress() != null) {
-
-
-            response.setCity(
-                    employee.getAddress()
-                            .getCity());
-
-
-            response.setCountry(
-                    employee.getAddress()
-                            .getCountry());
-
-        }
-
-
-
-        return response;
-
+    private EmployeeResponse convertToResponse(Employee employee) {
+        // SRAO: Replaced explicit null check with Optional.ofNullable and map/orElse
+        return Optional.ofNullable(employee)
+                .map(e -> {
+                    EmployeeResponse response = new EmployeeResponse();
+                    response.setId(e.getId());
+                    response.setEmployeeCode(e.getEmployeeCode());
+                    response.setFullName(e.getFirstName() + " " + e.getLastName());
+                    response.setEmail(e.getEmail());
+                    response.setPhoneNumber(e.getPhoneNumber());
+                    response.setDesignation(e.getDesignation());
+                    response.setSalary(e.getSalary());
+                    response.setJoiningDate(e.getJoiningDate());
+                    response.setStatus(e.getStatus());
+                    response.setManager(e.isManager());
+                    response.setSkills(e.getSkills());
+                    Optional.ofNullable(e.getDepartment()).ifPresent(dept -> {
+                        DepartmentResponse department = new DepartmentResponse();
+                        department.setId(dept.getId());
+                        department.setName(dept.getName());
+                        department.setLocation(dept.getLocation());
+                        department.setActive(dept.getActive());
+                        response.setDepartment(department);
+                    });
+                    Optional.ofNullable(e.getAddress()).ifPresent(address -> {
+                        response.setCity(address.getCity());
+                        response.setCountry(address.getCountry());
+                    });
+                    return response;
+                })
+                .orElse(null);
     }
-
-
-
-
-
 
     /**
      * Convert Request DTO to Entity.
      */
-    private Employee convertToEntity(
-            EmployeeRequest request) {
-
-
-
-        Employee employee =
-                new Employee();
-
-
-
-        employee.setEmployeeCode(
-                request.getEmployeeCode());
-
-
-        employee.setFirstName(
-                request.getFirstName());
-
-
-        employee.setLastName(
-                request.getLastName());
-
-
-        employee.setEmail(
-                request.getEmail());
-
-
-        employee.setPhoneNumber(
-                request.getPhoneNumber());
-
-
-        employee.setDesignation(
-                request.getDesignation());
-
-
-        employee.setSalary(
-                request.getSalary());
-
-
-        employee.setAddress(
-                request.getAddress());
-
-
-        employee.setManager(
-                request.isManager());
-
-
-        employee.setSkills(
-                request.getSkills());
-
-
-
+    private Employee convertToEntity(EmployeeRequest request) {
+        Employee employee = new Employee();
+        employee.setEmployeeCode(request.getEmployeeCode());
+        employee.setFirstName(request.getFirstName());
+        employee.setLastName(request.getLastName());
+        employee.setEmail(request.getEmail());
+        employee.setPhoneNumber(request.getPhoneNumber());
+        employee.setDesignation(request.getDesignation());
+        employee.setSalary(request.getSalary());
+        employee.setAddress(request.getAddress());
+        employee.setManager(request.isManager());
+        employee.setSkills(request.getSkills());
         return employee;
-
     }
-
-
 }

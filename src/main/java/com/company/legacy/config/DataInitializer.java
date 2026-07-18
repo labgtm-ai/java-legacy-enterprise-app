@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.time.Instant; // SRAO: Added for java.time API
 
 import javax.annotation.PostConstruct;
 
@@ -50,6 +51,7 @@ public class DataInitializer {
         List<Department> departments =
                 new ArrayList<Department>();
 
+        Instant now = Instant.now(); // SRAO: Replaced legacy Date with java.time.Instant
 
 
         Department engineering =
@@ -70,10 +72,10 @@ public class DataInitializer {
         engineering.setActive(true);
 
         engineering.setCreatedDate(
-                new Date());
+                Date.from(now)); // SRAO: Converted Instant to Date for legacy setter
 
         engineering.setLastModifiedDate(
-                new Date());
+                Date.from(now)); // SRAO: Converted Instant to Date for legacy setter
 
 
 
@@ -95,10 +97,10 @@ public class DataInitializer {
         finance.setActive(true);
 
         finance.setCreatedDate(
-                new Date());
+                Date.from(now)); // SRAO: Converted Instant to Date for legacy setter
 
         finance.setLastModifiedDate(
-                new Date());
+                Date.from(now)); // SRAO: Converted Instant to Date for legacy setter
 
 
 
@@ -123,6 +125,7 @@ public class DataInitializer {
         List<Employee> employees =
                 new ArrayList<Employee>();
 
+        Instant now = Instant.now(); // SRAO: Replaced legacy Date with java.time.Instant
 
 
         Employee employee1 =
@@ -159,7 +162,7 @@ public class DataInitializer {
                 false);
 
         employee1.setJoiningDate(
-                new Date());
+                Date.from(now)); // SRAO: Converted Instant to Date for legacy setter
 
 
 
@@ -238,7 +241,7 @@ public class DataInitializer {
                 true);
 
         employee2.setJoiningDate(
-                new Date());
+                Date.from(now)); // SRAO: Converted Instant to Date for legacy setter
 
 
 
