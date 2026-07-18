@@ -127,22 +127,8 @@ public final class FakeDatabase {
 
 
         if(employeeList != null) {
-
-
-            for(int i = 0;
-                i < employeeList.size();
-                i++) {
-
-
-                Employee employee =
-                        employeeList.get(i);
-
-
-
-                employees.add(employee);
-
-            }
-
+            // SRAO: Replaced traditional for-loop with Collection.addAll for conciseness.
+            employees.addAll(employeeList);
         }
 
 
@@ -166,30 +152,12 @@ public final class FakeDatabase {
 
 
         if(departmentList != null) {
-
-
-            for(int i = 0;
-                i < departmentList.size();
-                i++) {
-
-
-                Department department =
-                        departmentList.get(i);
-
-
-
-                departments.put(
-                        department.getId(),
-                        department);
-
-            }
-
+            // SRAO: Replaced traditional for-loop with Stream API for functional iteration.
+            departmentList.stream().forEach(department -> departments.put(department.getId(), department));
         }
 
 
     }
-
-
 
 
 

@@ -1,6 +1,7 @@
 package com.company.legacy.entity;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * Represents an employee's address.
@@ -59,13 +60,8 @@ public class Address implements Serializable {
     }
 
     public void setAddressLine1(String addressLine1) {
-
-        if (addressLine1 != null) {
-            this.addressLine1 = addressLine1.trim();
-        } else {
-            this.addressLine1 = null;
-        }
-
+        // SRAO: Replaced explicit null check with Optional for cleaner handling.
+        this.addressLine1 = Optional.ofNullable(addressLine1).map(String::trim).orElse(null);
     }
 
     public String getAddressLine2() {
@@ -73,13 +69,8 @@ public class Address implements Serializable {
     }
 
     public void setAddressLine2(String addressLine2) {
-
-        if (addressLine2 != null) {
-            this.addressLine2 = addressLine2.trim();
-        } else {
-            this.addressLine2 = null;
-        }
-
+        // SRAO: Replaced explicit null check with Optional for cleaner handling.
+        this.addressLine2 = Optional.ofNullable(addressLine2).map(String::trim).orElse(null);
     }
 
     public String getCity() {
@@ -87,13 +78,8 @@ public class Address implements Serializable {
     }
 
     public void setCity(String city) {
-
-        if (city != null) {
-            this.city = city.trim();
-        } else {
-            this.city = null;
-        }
-
+        // SRAO: Replaced explicit null check with Optional for cleaner handling.
+        this.city = Optional.ofNullable(city).map(String::trim).orElse(null);
     }
 
     public String getState() {
@@ -101,13 +87,8 @@ public class Address implements Serializable {
     }
 
     public void setState(String state) {
-
-        if (state != null) {
-            this.state = state.trim();
-        } else {
-            this.state = null;
-        }
-
+        // SRAO: Replaced explicit null check with Optional for cleaner handling.
+        this.state = Optional.ofNullable(state).map(String::trim).orElse(null);
     }
 
     public String getCountry() {
@@ -115,13 +96,8 @@ public class Address implements Serializable {
     }
 
     public void setCountry(String country) {
-
-        if (country != null) {
-            this.country = country.trim();
-        } else {
-            this.country = null;
-        }
-
+        // SRAO: Replaced explicit null check with Optional for cleaner handling.
+        this.country = Optional.ofNullable(country).map(String::trim).orElse(null);
     }
 
     public String getZipCode() {
@@ -129,53 +105,33 @@ public class Address implements Serializable {
     }
 
     public void setZipCode(String zipCode) {
-
-        if (zipCode != null) {
-            this.zipCode = zipCode.trim();
-        } else {
-            this.zipCode = null;
-        }
-
+        // SRAO: Replaced explicit null check with Optional for cleaner handling.
+        this.zipCode = Optional.ofNullable(zipCode).map(String::trim).orElse(null);
     }
 
     /**
      * Returns the full address as a single string.
      */
     public String getFullAddress() {
+        // SRAO: Replaced explicit null checks with Optional for cleaner string concatenation.
+        // SRAO: Replaced StringBuffer with StringBuilder for performance.
+        StringBuilder buffer = new StringBuilder();
 
-        StringBuffer buffer = new StringBuffer();
+        Optional.ofNullable(addressLine1).ifPresent(buffer::append);
 
-        if (addressLine1 != null) {
-            buffer.append(addressLine1);
-        }
+        Optional.ofNullable(addressLine2)
+                .filter(s -> !s.isEmpty())
+                .ifPresent(s -> buffer.append(", ").append(s));
 
-        if (addressLine2 != null && addressLine2.length() > 0) {
-            buffer.append(", ");
-            buffer.append(addressLine2);
-        }
+        Optional.ofNullable(city).ifPresent(s -> buffer.append(", ").append(s));
 
-        if (city != null) {
-            buffer.append(", ");
-            buffer.append(city);
-        }
+        Optional.ofNullable(state).ifPresent(s -> buffer.append(", ").append(s));
 
-        if (state != null) {
-            buffer.append(", ");
-            buffer.append(state);
-        }
+        Optional.ofNullable(country).ifPresent(s -> buffer.append(", ").append(s));
 
-        if (country != null) {
-            buffer.append(", ");
-            buffer.append(country);
-        }
-
-        if (zipCode != null) {
-            buffer.append(" - ");
-            buffer.append(zipCode);
-        }
+        Optional.ofNullable(zipCode).ifPresent(s -> buffer.append(" - ").append(s));
 
         return buffer.toString();
-
     }
 
     @Override
@@ -225,7 +181,8 @@ public class Address implements Serializable {
     @Override
     public String toString() {
 
-        StringBuffer buffer = new StringBuffer();
+        // SRAO: Replaced StringBuffer with StringBuilder for performance.
+        StringBuilder buffer = new StringBuilder();
 
         buffer.append("Address [");
         buffer.append("id=").append(id);

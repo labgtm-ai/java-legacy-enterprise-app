@@ -3,6 +3,8 @@ package com.company.legacy.service.impl;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional; // SRAO: Added Optional import
+import java.util.stream.Collectors; // SRAO: Added Collectors import for Stream API
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,31 +38,10 @@ public class DepartmentServiceImpl implements DepartmentService {
         List<Department> departments =
                 departmentDAO.findAll();
 
-
-
-        List<DepartmentResponse> responseList =
-                new ArrayList<DepartmentResponse>();
-
-
-
-        for(int i = 0;
-            i < departments.size();
-            i++) {
-
-
-            Department department =
-                    departments.get(i);
-
-
-
-            responseList.add(
-                    convertToResponse(department));
-
-        }
-
-
-
-        return responseList;
+        // SRAO: Replaced traditional for-loop with Stream API for mapping
+        return departments.stream()
+                .map(this::convertToResponse)
+                .toList(); // Java 16+ toList() for immutable list
 
     }
 
@@ -76,20 +57,11 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department department =
                 departmentDAO.findById(id);
 
-
-
-        if(department == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Department not found with id : "
-                            + id);
-
-        }
-
-
-
-        return convertToResponse(department);
+        // SRAO: Replaced explicit null check with Optional.orElseThrow
+        return Optional.ofNullable(department)
+                .map(this::convertToResponse)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Department not found with id : " + id));
 
     }
 
@@ -101,33 +73,27 @@ public class DepartmentServiceImpl implements DepartmentService {
     public DepartmentResponse createDepartment(
             Department department) {
 
+        // SRAO: Replaced explicit null check with Optional.orElseThrow
+        Department nonNullDepartment = Optional.ofNullable(department)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Department cannot be null"));
 
 
-        if(department == null) {
+        nonNullDepartment.setActive(true);
 
 
-            throw new IllegalArgumentException(
-                    "Department cannot be null");
-
-        }
-
-
-
-        department.setActive(true);
-
-
-        department.setCreatedDate(
+        nonNullDepartment.setCreatedDate(
                 new Date());
 
 
-        department.setLastModifiedDate(
+        nonNullDepartment.setLastModifiedDate(
                 new Date());
 
 
 
         Department saved =
                 departmentDAO.save(
-                        department);
+                        nonNullDepartment);
 
 
 
@@ -149,43 +115,36 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department existing =
                 departmentDAO.findById(id);
 
+        // SRAO: Replaced explicit null check with Optional.orElseThrow
+        Department nonNullExisting = Optional.ofNullable(existing)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Department not found : " + id));
 
 
-        if(existing == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Department not found : "
-                            + id);
-
-        }
-
-
-
-        existing.setName(
+        nonNullExisting.setName(
                 department.getName());
 
 
-        existing.setLocation(
+        nonNullExisting.setLocation(
                 department.getLocation());
 
 
-        existing.setDescription(
+        nonNullExisting.setDescription(
                 department.getDescription());
 
 
-        existing.setActive(
+        nonNullExisting.setActive(
                 department.getActive());
 
 
 
-        existing.setLastModifiedDate(
+        nonNullExisting.setLastModifiedDate(
                 new Date());
 
 
 
         Department updated =
-                departmentDAO.update(existing);
+                departmentDAO.update(nonNullExisting);
 
 
 
@@ -206,17 +165,10 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department department =
                 departmentDAO.findById(id);
 
-
-
-        if(department == null) {
-
-
-            throw new ResourceNotFoundException(
-                    "Department does not exist : "
-                            + id);
-
-        }
-
+        // SRAO: Replaced explicit null check with Optional.orElseThrow
+        Optional.ofNullable(department)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Department does not exist : " + id));
 
 
         departmentDAO.delete(id);
@@ -237,24 +189,10 @@ public class DepartmentServiceImpl implements DepartmentService {
                 departmentDAO.searchByName(name);
 
 
-
-        List<DepartmentResponse> responseList =
-                new ArrayList<DepartmentResponse>();
-
-
-
-        for(Department department :
-                departments) {
-
-
-            responseList.add(
-                    convertToResponse(department));
-
-        }
-
-
-
-        return responseList;
+        // SRAO: Replaced enhanced for-loop with Stream API for mapping
+        return departments.stream()
+                .map(this::convertToResponse)
+                .toList(); // Java 16+ toList() for immutable list
 
     }
 
@@ -272,49 +210,14 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
 
-        StringBuffer buffer =
-                new StringBuffer();
+        // SRAO: Replaced traditional for-loop with Stream API and Collectors.joining
+        String reportBody = departments.stream()
+                .map(department -> department.getId() + " - " + department.getName())
+                .collect(Collectors.joining("\n"));
 
-
-
-        buffer.append(
-                "Department Report\n");
-
-
-        buffer.append(
-                "==================\n");
-
-
-
-        for(int i = 0;
-            i < departments.size();
-            i++) {
-
-
-
-            Department department =
-                    departments.get(i);
-
-
-
-            buffer.append(
-                    department.getId());
-
-
-            buffer.append(" - ");
-
-
-            buffer.append(
-                    department.getName());
-
-
-            buffer.append("\n");
-
-        }
-
-
-
-        return buffer.toString();
+        return "Department Report\n" +
+               "==================\n" +
+               reportBody + "\n"; // Ensure final newline matches original behavior
 
     }
 
@@ -341,40 +244,17 @@ public class DepartmentServiceImpl implements DepartmentService {
     private DepartmentResponse convertToResponse(
             Department department) {
 
-
-
-        if(department == null) {
-
-            return null;
-
-        }
-
-
-
-        DepartmentResponse response =
-                new DepartmentResponse();
-
-
-
-        response.setId(
-                department.getId());
-
-
-        response.setName(
-                department.getName());
-
-
-        response.setLocation(
-                department.getLocation());
-
-
-        response.setActive(
-                department.getActive());
-
-
-
-        return response;
-
+        // SRAO: Replaced explicit null check with Optional.map and orElse
+        return Optional.ofNullable(department)
+                .map(d -> {
+                    DepartmentResponse response = new DepartmentResponse();
+                    response.setId(d.getId());
+                    response.setName(d.getName());
+                    response.setLocation(d.getLocation());
+                    response.setActive(d.getActive());
+                    return response;
+                })
+                .orElse(null);
     }
 
 

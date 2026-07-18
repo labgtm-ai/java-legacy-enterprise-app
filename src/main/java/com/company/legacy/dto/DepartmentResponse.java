@@ -95,7 +95,7 @@ public class DepartmentResponse implements Serializable {
     @Override
     public String toString() {
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder(); // SRAO: Replaced StringBuffer with StringBuilder for better performance in a non-thread-safe context.
 
         buffer.append("DepartmentResponse [");
 
