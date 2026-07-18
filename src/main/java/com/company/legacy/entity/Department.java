@@ -2,6 +2,7 @@ package com.company.legacy.entity;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Optional;
 
 /**
  * Represents a department within the organization.
@@ -69,13 +70,7 @@ public class Department implements Serializable {
     }
 
     public void setName(String name) {
-
-        if (name != null) {
-            this.name = name.trim();
-        } else {
-            this.name = null;
-        }
-
+        this.name = Optional.ofNullable(name).map(String::trim).orElse(null); // SRAO: Replaced explicit null check with Optional for name trimming
     }
 
     public String getLocation() {
@@ -83,13 +78,7 @@ public class Department implements Serializable {
     }
 
     public void setLocation(String location) {
-
-        if (location != null) {
-            this.location = location.trim();
-        } else {
-            this.location = null;
-        }
-
+        this.location = Optional.ofNullable(location).map(String::trim).orElse(null); // SRAO: Replaced explicit null check with Optional for location trimming
     }
 
     public String getDescription() {
@@ -97,13 +86,7 @@ public class Department implements Serializable {
     }
 
     public void setDescription(String description) {
-
-        if (description != null) {
-            this.description = description.trim();
-        } else {
-            this.description = null;
-        }
-
+        this.description = Optional.ofNullable(description).map(String::trim).orElse(null); // SRAO: Replaced explicit null check with Optional for description trimming
     }
 
     public Boolean getActive() {
@@ -150,62 +133,38 @@ public class Department implements Serializable {
      * Checks whether the department is active.
      */
     public boolean isActiveDepartment() {
-
-        if (active == null) {
-            return false;
-        }
-
-        return active.booleanValue();
+        return Optional.ofNullable(active).orElse(false); // SRAO: Replaced explicit null check with Optional for active status
     }
 
     @Override
     public int hashCode() {
-
         final int prime = 31;
         int result = 1;
-
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-
+        result = prime * result + Optional.ofNullable(id).map(Object::hashCode).orElse(0); // SRAO: Replaced explicit null check with Optional for id hashCode
         return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-
         if (this == obj) {
             return true;
         }
-
         if (obj == null) {
             return false;
         }
-
         if (!(obj instanceof Department)) {
             return false;
         }
-
         Department other = (Department) obj;
-
-        if (id == null) {
-
-            if (other.id != null) {
-                return false;
-            }
-
-        } else if (!id.equals(other.id)) {
-
+        if (!Optional.ofNullable(id).map(i -> i.equals(other.id)).orElse(other.id == null)) { // SRAO: Replaced explicit null check with Optional for ID comparison
             return false;
-
         }
-
         return true;
     }
 
     @Override
     public String toString() {
-
         StringBuilder builder = new StringBuilder();
-
         builder.append("Department [");
         builder.append("id=").append(id);
         builder.append(", name=").append(name);
@@ -215,9 +174,7 @@ public class Department implements Serializable {
         builder.append(", createdDate=").append(createdDate);
         builder.append(", lastModifiedDate=").append(lastModifiedDate);
         builder.append("]");
-
         return builder.toString();
-
     }
 
 }

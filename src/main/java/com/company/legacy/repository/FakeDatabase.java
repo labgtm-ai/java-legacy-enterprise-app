@@ -1,9 +1,10 @@
 package com.company.legacy.repository;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap; // SRAO: Replaced Hashtable with ConcurrentHashMap for modern thread-safe map implementation.
 
 import com.company.legacy.entity.Department;
 import com.company.legacy.entity.Employee;
@@ -16,11 +17,11 @@ import com.company.legacy.entity.Employee;
  */
 public final class FakeDatabase {
 
-    private static final Vector<Employee> EMPLOYEES =
-            new Vector<Employee>();
+    private static final List<Employee> EMPLOYEES = // SRAO: Replaced Vector with Collections.synchronizedList(new ArrayList<>()) for a thread-safe mutable list.
+            Collections.synchronizedList(new ArrayList<Employee>());
 
-    private static final Hashtable<Integer, Department> DEPARTMENTS =
-            new Hashtable<Integer, Department>();
+    private static final ConcurrentHashMap<Integer, Department> DEPARTMENTS =
+            new ConcurrentHashMap<Integer, Department>();
 
     static {
 
@@ -91,24 +92,24 @@ public final class FakeDatabase {
 
     }
 
-    public static synchronized Vector<Employee> getEmployees() {
+    public static synchronized List<Employee> getEmployees() { // SRAO: Changed return type from Vector to List.
 
         return EMPLOYEES;
 
     }
 
-    public static synchronized Hashtable<Integer, Department> getDepartments() {
+    public static synchronized ConcurrentHashMap<Integer, Department> getDepartments() {
 
         return DEPARTMENTS;
 
     }
 
-    private static Vector<Employee> employees =
-            new Vector<Employee>();
+    private static final List<Employee> employees = // SRAO: Replaced Vector with Collections.synchronizedList(new ArrayList<>()) for a thread-safe mutable list.
+            Collections.synchronizedList(new ArrayList<Employee>());
 
 
-    private static Hashtable<Integer, Department> departments =
-            new Hashtable<Integer, Department>();
+    private static ConcurrentHashMap<Integer, Department> departments =
+            new ConcurrentHashMap<Integer, Department>();
 
 
 
@@ -128,20 +129,8 @@ public final class FakeDatabase {
 
         if(employeeList != null) {
 
-
-            for(int i = 0;
-                i < employeeList.size();
-                i++) {
-
-
-                Employee employee =
-                        employeeList.get(i);
-
-
-
-                employees.add(employee);
-
-            }
+            // SRAO: Replaced traditional for-loop with List.addAll() for conciseness.
+            employees.addAll(employeeList);
 
         }
 
@@ -167,32 +156,13 @@ public final class FakeDatabase {
 
         if(departmentList != null) {
 
-
-            for(int i = 0;
-                i < departmentList.size();
-                i++) {
-
-
-                Department department =
-                        departmentList.get(i);
-
-
-
-                departments.put(
-                        department.getId(),
-                        department);
-
-            }
+            // SRAO: Replaced traditional for-loop with Stream API's forEach for functional style.
+            departmentList.forEach(department -> departments.put(department.getId(), department));
 
         }
 
 
     }
-
-
-
-
-
 
 
 
