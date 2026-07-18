@@ -390,8 +390,8 @@ public class EmployeeDAOImpl implements EmployeeDAO {
     public String generateEmployeeSummary() {
 
 
-        StringBuffer buffer =
-                new StringBuffer();
+        StringBuilder buffer = // SRAO: Replaced StringBuffer with StringBuilder for performance.
+                new StringBuilder();
 
 
         for (int i = 0;
